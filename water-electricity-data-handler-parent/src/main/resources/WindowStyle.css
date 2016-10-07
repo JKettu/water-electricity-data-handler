@@ -1,0 +1,52 @@
+
+root {
+    display: block;
+}
+
+.root {
+    -fx-background-color: radial-gradient(center 50% -40%, radius 250%, #64DF85 30%, #85EB6A 50%);
+}
+
+.tooltip {
+    -fx-background-color: radial-gradient(center 50% -30%, radius 200%, #57b0ff 30%, #0080f0 50%);
+    -fx-tooltip-weight: 150px;
+    -fx-border-radius: 50px;
+    -fx-text-fill: white;
+}
+
+.radio {
+    -fx-text-color: #248F40;
+    -fx-font-size: 14px;
+}
+
+.label {
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-text-fill: black;
+}
+
+.text-field {
+    -fx-font-family: "Arial-Black";
+    -fx-font-size: 14px;
+    -fx-text-fill: black;
+}
+
+#actionTarget {
+    -fx-fill: FIREBRICK;
+    -fx-font-weight: bold;
+    -fx-effect: dropshadow(gaussian, rgba(255, 255, 255, 0.5), 0, 0.0, 0, 1);
+
+}
+
+.button {
+    -fx-text-fill: black;
+    -fx-font-family: "Arial-Narrow";
+    -fx-font-weight: bold;
+    -fx-font-size: 14px;
+    -fx-background-color: linear-gradient(rgba(36, 143, 64, 0.5), rgba(36, 143, 64, 0.9)),
+    radial-gradient(center 50% -30%, radius 200%, #64DF85 30%, #2eb053 50%);
+
+    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.9), 5, 0.0, 0, 1);
+}
+
+}
