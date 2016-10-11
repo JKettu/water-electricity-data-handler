@@ -18,7 +18,6 @@ public class LockMonitor {
     private LockMonitor() {
         locks = new ArrayList<>();
         lastClientLocks = new HashMap<>();
-        startMonitoring();
     }
 
     public static LockMonitor getLockMonitor() {
@@ -28,7 +27,7 @@ public class LockMonitor {
         return instance;
     }
 
-    private void startMonitoring() {
+    public void startMonitoring() {
         Thread t = new Thread(new Runnable() {
             @Override
             public void run() {

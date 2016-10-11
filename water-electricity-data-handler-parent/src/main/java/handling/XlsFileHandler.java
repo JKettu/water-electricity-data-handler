@@ -1214,7 +1214,7 @@ public class XlsFileHandler {
                             cell.setCellValue(arrayForElectricity.get(i).getJoint());
                             break;
                         case 5:
-                            cell.setCellValue(arrayForElectricity.get(i).getAccountingDevice());
+                            cell.setCellValue(arrayForElectricity.get(i).getHasAccountingDevice());
                             break;
                         case 6:
                             cell.setCellValue(arrayForElectricity.get(i).getExpenseHouseFirstMonth());
@@ -1296,10 +1296,10 @@ public class XlsFileHandler {
                             cell.setCellValue(arrayForWater.get(i).getPeople());
                             break;
                         case 6:
-                            cell.setCellValue(arrayForWater.get(i).getColdWaterAccountingDevice());
+                            cell.setCellValue(arrayForWater.get(i).getHasColdWaterAccountingDevice());
                             break;
                         case 7:
-                            cell.setCellValue(arrayForWater.get(i).getHotWaterAccountingDevice());
+                            cell.setCellValue(arrayForWater.get(i).getHasHotWaterAccountingDevice());
                             break;
                         case 8:
                             cell.setCellValue(arrayForWater.get(i).getExpenseHouseCold());
@@ -1431,17 +1431,17 @@ public class XlsFileHandler {
         switch (cell.getCellType()) {
             case Cell.CELL_TYPE_STRING:
                 if (cell.getStringCellValue().equals("")) {
-                    arrayForElectricity.get(arrayForElectricity.size() - 1).setAccountingDevice("нет");
+                    arrayForElectricity.get(arrayForElectricity.size() - 1).setHasAccountingDevice("нет");
                 } else {
                     arrayForElectricity.get(arrayForElectricity.size() - 1)
-                            .setAccountingDevice(cell.getStringCellValue());
+                            .setHasAccountingDevice(cell.getStringCellValue());
                 }
                 break;
             case Cell.CELL_TYPE_NUMERIC:
                 if (DateUtil.isCellDateFormatted(cell)) {
-                    arrayForElectricity.get(arrayForElectricity.size() - 1).setAccountingDevice("нет");
+                    arrayForElectricity.get(arrayForElectricity.size() - 1).setHasAccountingDevice("нет");
                 } else {
-                    arrayForElectricity.get(arrayForElectricity.size() - 1).setAccountingDevice("нет");
+                    arrayForElectricity.get(arrayForElectricity.size() - 1).setHasAccountingDevice("нет");
                 }
                 break;
         }
@@ -1796,12 +1796,12 @@ public class XlsFileHandler {
         switch (cell.getCellType()) {
             case Cell.CELL_TYPE_STRING:
                 if (!cell.getStringCellValue().equals("")) {
-                    arrayForWater.get(arrayForWater.size() - 1).setColdWaterAccountingDevice(cell.getStringCellValue());
+                    arrayForWater.get(arrayForWater.size() - 1).setHasColdWaterAccountingDevice(cell.getStringCellValue());
                 }
                 break;
             case Cell.CELL_TYPE_NUMERIC:
                 if (cell.getNumericCellValue() != 0) {
-                    arrayForWater.get(arrayForWater.size() - 1).setColdWaterAccountingDevice(null);
+                    arrayForWater.get(arrayForWater.size() - 1).setHasColdWaterAccountingDevice(null);
                 }
                 break;
         }
@@ -1811,12 +1811,12 @@ public class XlsFileHandler {
         switch (cell.getCellType()) {
             case Cell.CELL_TYPE_STRING:
                 if (!cell.getStringCellValue().equals("")) {
-                    arrayForWater.get(arrayForWater.size() - 1).setHotWaterAccountingDevice(cell.getStringCellValue());
+                    arrayForWater.get(arrayForWater.size() - 1).setHasHotWaterAccountingDevice(cell.getStringCellValue());
                 }
                 break;
             case Cell.CELL_TYPE_NUMERIC:
                 if (cell.getNumericCellValue() != 0) {
-                    arrayForWater.get(arrayForWater.size() - 1).setHotWaterAccountingDevice(null);
+                    arrayForWater.get(arrayForWater.size() - 1).setHasColdWaterAccountingDevice(null);
                 }
                 break;
         }

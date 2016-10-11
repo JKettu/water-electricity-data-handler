@@ -1,14 +1,12 @@
 package gui.window;
 
 import controller.NewServerFileNameInputWindowController;
-import javafx.event.EventHandler;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.SceneBuilder;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.layout.VBoxBuilder;
@@ -16,7 +14,6 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 import java.awt.*;
-import java.io.IOException;
 
 import static gui.common.GuiCommonLib.*;
 
@@ -69,7 +66,7 @@ public class NewServerFileNameInputWindow extends BaseWindow<NewServerFileNameIn
         createFileNameInputTextField();
         createErrorTextLabel();
         createCreateButton();
-        HBox createCreateButtonBox = wrapButtonToCenteredHBox(createButton);
+        HBox createCreateButtonBox = wrapNodeToCenteredHBox(createButton);
 
         HBox inputFileNameLabelBox = new HBox();
         Label label = new Label("    Введите название нового файла.\nВнимание! Название вводится без расширения.\n");

@@ -5,9 +5,7 @@ import javax.swing.filechooser.FileFilter;
 import java.awt.*;
 import java.io.File;
 
-/**
- * Created by Anton on 20.07.2016.
- */
+
 public class ExcelFileChooser extends JFileChooser {
 
     public ExcelFileChooser() {

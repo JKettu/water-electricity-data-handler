@@ -14,26 +14,17 @@ public class SuccessLoadWindowController extends BaseWindowController<SuccessLoa
     private MainWindowController mainWindowController;
 
     SuccessLoadWindowController(SuccessLoadWindow window, MainWindowController mainWindowController) {
-        super(window);
         this.mainWindowController = mainWindowController;
     }
 
     public EventHandler<MouseEvent> getAgainButtonClickHandler() {
-        return new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent event) {
-                mainWindowController.setSelectedDataType(DataType.WATER);
-                mainWindowController.updateWindow();
-            }
+        return event -> {
+            mainWindowController.setSelectedDataType(DataType.WATER);
+            mainWindowController.updateWindow();
         };
     }
 
     public EventHandler<MouseEvent> getExitButtonClickHandler() {
-        return new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent event) {
-                CommonControllerMethods.exit();
-            }
-        };
+        return event -> CommonControllerMethods.exit();
     }
 }

@@ -3,26 +3,24 @@ package controller;
 import com.sun.javafx.collections.ObservableListWrapper;
 import common.ConnectionFailedException;
 import common.DataType;
-import common.logger.LogCategory;
-import common.logger.Logger;
-import controller.common.CommonControllerMethods;
-import gui.ExcelFileChooser;
 import gui.common.GuiConstants;
-import gui.window.*;
+import gui.window.DeleteRegionFromServerFileWindow;
+import gui.window.NewServerFileNameInputWindow;
+import gui.window.SuccessLoadWindow;
+import gui.window.UnsuccessStartWindow;
+import gui.window.main.MainWindow;
 import handling.XlsFileHandler;
 import handling.XlsxFileHandler;
 import handling.util.HandlingType;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.concurrent.WorkerStateEvent;
 import javafx.event.EventHandler;
-import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.VBox;
+import lombok.NoArgsConstructor;
+import lombok.val;
 import server.FTPController;
-import server.LockMonitor;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -30,6 +28,7 @@ import java.util.List;
 
 import static common.CommonUtils.isNullOrEmpty;
 
+@NoArgsConstructor
 public class MainWindowController extends BaseWindowController<MainWindow> {
 
     private XlsxFileHandler xlsxFileHandler;
@@ -42,241 +41,24 @@ public class MainWindowController extends BaseWindowController<MainWindow> {
     private XlsFileHandler xlsFileHandler;
 
     public MainWindowController(MainWindow window) {
-        super(window);
         xlsxFileHandler = new XlsxFileHandler();
         serverFileNames = new ArrayList<>();
-        ObservableListWrapper<String> serverFileNamesObservableList = new ObservableListWrapper<>(serverFileNames);
+        val serverFileNamesObservableList = new ObservableListWrapper<>(serverFileNames);
         serverFileNamesObservableList.add(GuiConstants.NEW_SERVER_FILE_GUI_TEXT);
-        window.getServerFilesBox().setItems(serverFileNamesObservableList);
+        window.getRightBlock().getServerFilesBox().setItems(serverFileNamesObservableList);
+    }
+
+    public void processSendFileButtonClick(MouseEvent clickEvent){
+
     }
 
     void setSelectedDataType(DataType dataType) {
         selectedDataType = dataType;
     }
 
-    public EventHandler<MouseEvent> getWaterRadioButtonClickHandler() {
-        return new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent event) {
-                RadioButton electricityButton = window.getElectricityRadioButton();
-                electricityButton.setSelected(false);
-                RadioButton waterButton = window.getWaterRadioButton();
-                waterButton.setSelected(true);
-                selectedDataType = DataType.WATER;
-            }
-        };
-    }
-
-    public EventHandler<MouseEvent> getElectricityRadioButtonClickHandler() {
-        return new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent event) {
-                RadioButton waterButton = window.getWaterRadioButton();
-                waterButton.setSelected(false);
-                RadioButton electricityButton = window.getElectricityRadioButton();
-                electricityButton.setSelected(true);
-                selectedDataType = DataType.ELECTRICITY;
-            }
-        };
-    }
-
-    public EventHandler<MouseEvent> getLoadFileButtonClickHandler() {
-
-        return new EventHandler<MouseEvent>() {
-
-            @Override
-            public void handle(MouseEvent mouseEvent) {
-                //Загрузка файла с компьютера
-                ExcelFileChooser excelFileChooser = new ExcelFileChooser();
-                int result = excelFileChooser.showDialog(null, "Открыть файл");
-                if (result == ExcelFileChooser.APPROVE_OPTION) {
-
-                    loadedFile = excelFileChooser.getSelectedFile();
-                    String loadedFilePath = loadedFile.getAbsolutePath();
-                    String loadedFileName = loadedFile.getName();
-                    Label loadFileErrorTextLabel = window.getLoadFileErrorTextLabel();
-                    Label sendFileInfoTextLabel = window.getSendFileInfoTextLabel();
-
-                    if (clientFileWasLoadedCorrectly(loadedFilePath, loadedFileName)) {
-                        loadFileErrorTextLabel.setText("Файл загружен");
-                        sendFileInfoTextLabel.setText("");
-                        loadedFileReadyForSend = true;
-                    } else {
-                        loadFileErrorTextLabel.setText("Неверный формат или имя файла");
-                        loadedFileReadyForSend = false;
-                    }
-
-                }
-            }
-
-        };
-    }
-
-    //кнопка "отправить"
-    public EventHandler<MouseEvent> getSendButtonClickHandler() {
-        return new EventHandler<MouseEvent>() {
-
-            @Override
-            public void handle(MouseEvent event) {
-                Label sendFileInfoTextLabel = window.getSendFileInfoTextLabel();
-                //Отправка загруженного файла в БД
-
-                //если не выбрали файл, в который будет идти запись
-                if (!isSelectedFileNameEmpty()) {
-                    sendFileInfoTextLabel.setText("Выберите файл для выгрузки данных");
-                    return;
-                }
-                //если файл НЕ был загружен
-                if (!loadedFileReadyForSend) {
-                    sendFileInfoTextLabel.setText("Выберите файл для загрузки данных");
-                    return;
-                }
-
-                if (((loadedFile.getName().matches("В.+-\\d+\\.xls")) ||
-                        (loadedFile.getName().matches("В.+-\\d+\\.xlsx"))) &&
-                        (selectedDataType.equals(DataType.ELECTRICITY))) {
-                    sendFileInfoTextLabel.setText("Выбранная категория и загруженный файл не совпадают");
-                    return;
-                }
-
-                if (((loadedFile.getName().matches("Э.+-\\d+\\.xls")) ||
-                        (loadedFile.getName().matches("Э.+-\\d+\\.xlsx"))) &&
-                        (selectedDataType.equals(DataType.WATER))) {
-                    sendFileInfoTextLabel.setText("Выбранная категория и загруженный файл не совпадают");
-                    return;
-                }
-
-                if (!loadedFile.exists()) {
-                    sendFileInfoTextLabel.setText("Файл с указанным именем не был найден");
-                    return;
-                }
-
-                //если файл есть изначально
-                if (!isSelectedFileNameIsNewFile()) {
-                    Task<Void> task = new Task<Void>() {
-                        @Override
-                        public Void call() {
-                            Logger logger = Logger.getLogger(getClass().toString(), "call");
-                            try {
-                                readServerFile();
-                            } catch (Exception e) {
-                                logger.log(LogCategory.ERROR, "Ошибка обработки файлов: " + e);
-                                LockMonitor.getLockMonitor().forceDeleteLocks();
-                            }
-                            return null;
-                        }
-
-                        @Override
-                        protected void failed() {
-                            enableWindow();
-                            showUnsuccessfulStartWindow("Ошибка обработки файлов");
-                        }
-                    };
-
-                    task.setOnSucceeded(new EventHandler<WorkerStateEvent>() {
-                        @Override
-                        public void handle(WorkerStateEvent event) {
-                            enableWindow();
-                            setSuccessLoadWindow();
-                        }
-                    });
-                    new Thread(task).start();
-                    changeErrorMessage("Файл отправляется...");
-
-                } else //если файла нет
-                {
-                    createStageForNewFileName();
-                }
-                disableWindow();
-            }
-        };
-    }
-
-    public EventHandler<MouseEvent> getExitButtonClickHandler() {
-        return new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent event) {
-                CommonControllerMethods.exit();
-            }
-        };
-    }
-
-    public EventHandler<MouseEvent> getDeleteRegionButtonClickHandler() {
-        return new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent mouseEvent) {
-                if (selectedServerFileName == null || selectedServerFileName.isEmpty() ||
-                        selectedServerFileName.equals(GuiConstants.NEW_SERVER_FILE_GUI_TEXT)) {
-                    window.getSendFileInfoTextLabel().setText("Выберите серверный файл");
-                    return;
-                }
-                createStageForRegions();
-            }
-        };
-    }
-
-    public ChangeListener<String> getServerFileNamesComboBoxChangeListener() {
-        return new ChangeListener<String>() {
-            @Override
-            public void changed(ObservableValue<? extends String> observableValue, String s, String t1) {
-                selectedServerFileName = observableValue.getValue();
-                Button deleteButton = window.getDeleteButton();
-                if (selectedServerFileName == null || selectedServerFileName.equals("Новый файл")) {
-                    deleteButton.setDisable(true);
-                    return;
-                }
-                deleteButton.setDisable(false);
-            }
-        };
-    }
-
-    public EventHandler<MouseEvent> getServerFileNamesComboboxClickHandler() {
-        return new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent mouseEvent) {
-
-                changeErrorMessage("Загружаем список серверных файлов...");
-
-                final ComboBox<String> serverFilesBox = window.getServerFilesBox();
-                serverFilesBox.hide();
-                disableWindow();
-                Task<Void> task = new Task<Void>() {
-                    @Override
-                    protected Void call() throws Exception {
-                        serverFileNames = getServerFileNames();
-                        return null;
-                    }
-                };
-                new Thread(task).start();
-                task.setOnSucceeded(new EventHandler<WorkerStateEvent>() {
-                    @Override
-                    public void handle(WorkerStateEvent workerStateEvent) {
-
-                        ObservableList<String> items = serverFilesBox.getItems();
-                        if (serverFileNames != null) {
-                            items.setAll(serverFileNames);
-                        } else {
-                            items.clear();
-                        }
-                        items.add(GuiConstants.NEW_SERVER_FILE_GUI_TEXT);
-                        enableWindow();
-                        serverFilesBox.show();
-                    }
-                });
-                task.setOnFailed(new EventHandler<WorkerStateEvent>() {
-                    @Override
-                    public void handle(WorkerStateEvent workerStateEvent) {
-                        showUnsuccessfulStartWindow(
-                                "Нет подключения к Интернету. Выполните подключение и перезапустите программу");
-                    }
-                });
-
-            }
-        };
-    }
 
     void updateWindow() {
-        window.updateWindow();
+        window.reloadWindowElements();
         window.bindController(this);
     }
 
@@ -295,8 +77,8 @@ public class MainWindowController extends BaseWindowController<MainWindow> {
                 new SuccessLoadWindowController(successLoadWindow, this);
         successLoadWindow.bindController(successLoadWindowController);
         VBox successLoadWindowRoot = successLoadWindow.getRootField();//место размещения
-        VBox mainWindowRoot = window.getRootField();
-        mainWindowRoot.getChildren().add(successLoadWindowRoot);
+        //VBox mainWindowRoot = window.getRootField();
+        //mainWindowRoot.getChildren().add(successLoadWindowRoot);
     }
 
     void afterFileCreation() {
@@ -315,7 +97,7 @@ public class MainWindowController extends BaseWindowController<MainWindow> {
             }
         });
         new Thread(task).start();
-        changeErrorMessage("Файл отправляется...");
+        showLongTaskProcessingInfo("Файл отправляется...");
     }
 
     String getServerFileName() {
@@ -363,8 +145,8 @@ public class MainWindowController extends BaseWindowController<MainWindow> {
                 new UnsuccessStartWindowController(unsuccessStartWindow, errorText);
         unsuccessStartWindow.bindController(unsuccessStartWindowController);
         VBox unsuccessfulStartWindowRoot = unsuccessStartWindow.getRootField();//место размещения
-        VBox mainWindowRoot = window.getRootField();
-        mainWindowRoot.getChildren().add(unsuccessfulStartWindowRoot);
+        //VBox mainWindowRoot = window.getRootField();
+        //mainWindowRoot.getChildren().add(unsuccessfulStartWindowRoot);
     }
 
     private void createStageForNewFileName() {
@@ -557,37 +339,226 @@ public class MainWindowController extends BaseWindowController<MainWindow> {
         deleteRegionFromServerFileWindow.bindController(controller);
     }
 
-    private void changeErrorMessage(String message) {
-        Label sendFileInfoTextLabel = window.getSendFileInfoTextLabel();
-        sendFileInfoTextLabel.setText(message);
-        ProgressBar progressBar = new ProgressBar();
-        progressBar.isIndeterminate();
-        VBox progressBarBox = window.getProgressBarBox();
-        progressBarBox.getChildren().addAll(progressBar);
+    private void showLongTaskProcessingInfo(String info) {
+        window.setSendFileInfoText(info);
+        window.showProgressBar();
     }
 
     private void disableWindow() {
         window.getSendFileButton().setDisable(true);
-        window.getDeleteButton().setDisable(true);
-        window.getWaterRadioButton().setDisable(true);
-        window.getElectricityRadioButton().setDisable(true);
-        window.getLoadFileButton().setDisable(true);
-        window.getServerFilesBox().setDisable(true);
+
     }
 
     void enableWindow() {
         window.getSendFileButton().setDisable(false);
-        window.getWaterRadioButton().setDisable(false);
-        window.getElectricityRadioButton().setDisable(false);
-        window.getLoadFileButton().setDisable(false);
-        window.getProgressBarBox().getChildren().clear();
-        window.getSendFileInfoTextLabel().setText("");
-        window.getServerFilesBox().setDisable(false);
-        if (selectedServerFileName != null && !selectedServerFileName.isEmpty() &&
-                !selectedServerFileName.equals("Новый файл")) {
-            window.getDeleteButton().setDisable(false);
-        }
+//        window.getWaterRadioButton().setDisable(false);
+//        window.getElectricityRadioButton().setDisable(false);
+//        window.getLoadFileButton().setDisable(false);
+//        window.getProgressBarBox().getChildren().clear();
+//        window.getLongTaskInfoTextLabel().setText("");
+//        window.getServerFilesBox().setDisable(false);
+//        if (selectedServerFileName != null && !selectedServerFileName.isEmpty() &&
+//                !selectedServerFileName.equals("Новый файл")) {
+//            window.getDeleteButton().setDisable(false);
+//        }
 
     }
 
+    public void processServerFilesBoxClick(MouseEvent mouseEvent) {
+        showLongTaskProcessingInfo("Загружаем список серверных файлов...");
+        val mainWindowRightBlock = window.getRightBlock();
+        val serverFilesBox = mainWindowRightBlock.getServerFilesBox();
+        serverFilesBox.hide();
+        disableWindow();
+        Task<Void> task = new Task<Void>() {
+            @Override
+            protected Void call() throws Exception {
+                serverFileNames = getServerFileNames();
+                return null;
+            }
+        };
+        new Thread(task).start();
+        task.setOnSucceeded(workerStateEvent -> {
+            ObservableList<String> items = serverFilesBox.getItems();
+            if (serverFileNames != null) {
+                items.setAll(serverFileNames);
+            } else {
+                items.clear();
+            }
+            items.add(GuiConstants.NEW_SERVER_FILE_GUI_TEXT);
+            enableWindow();
+            serverFilesBox.show();
+        });
+        task.setOnFailed(workerStateEvent -> showUnsuccessfulStartWindow(
+                "Нет подключения к Интернету. Выполните подключение и перезапустите программу"));
+    }
+
+/*
+    private static final class EventHandlerProducer {
+        public EventHandler<MouseEvent> getWaterRadioButtonClickHandler() {
+            return event -> {
+                RadioButton electricityButton = window.getElectricityRadioButton();
+                electricityButton.setSelected(false);
+                RadioButton waterButton = window.getWaterRadioButton();
+                waterButton.setSelected(true);
+                selectedDataType = DataType.WATER;
+            };
+        }
+
+        public EventHandler<MouseEvent> getElectricityRadioButtonClickHandler() {
+            return new EventHandler<MouseEvent>() {
+                @Override
+                public void handle(MouseEvent event) {
+                    RadioButton waterButton = window.getWaterRadioButton();
+                    waterButton.setSelected(false);
+                    RadioButton electricityButton = window.getElectricityRadioButton();
+                    electricityButton.setSelected(true);
+                    selectedDataType = DataType.ELECTRICITY;
+                }
+            };
+        }
+
+        public EventHandler<MouseEvent> getLoadFileButtonClickHandler() {
+
+            return new EventHandler<MouseEvent>() {
+
+                @Override
+                public void handle(MouseEvent mouseEvent) {
+                    //Загрузка файла с компьютера
+                    ExcelFileChooser excelFileChooser = new ExcelFileChooser();
+                    int result = excelFileChooser.showDialog(null, "Открыть файл");
+                    if (result == ExcelFileChooser.APPROVE_OPTION) {
+
+                        loadedFile = excelFileChooser.getSelectedFile();
+                        String loadedFilePath = loadedFile.getAbsolutePath();
+                        String loadedFileName = loadedFile.getName();
+                        Label loadFileErrorTextLabel = window.getLoadFileErrorTextLabel();
+                        Label sendFileInfoTextLabel = window.getLongTaskInfoTextLabel();
+
+                        if (clientFileWasLoadedCorrectly(loadedFilePath, loadedFileName)) {
+                            loadFileErrorTextLabel.setText("Файл загружен");
+                            sendFileInfoTextLabel.setText("");
+                            loadedFileReadyForSend = true;
+                        } else {
+                            loadFileErrorTextLabel.setText("Неверный формат или имя файла");
+                            loadedFileReadyForSend = false;
+                        }
+
+                    }
+                }
+
+            };
+        }
+
+        //кнопка "отправить"
+        public EventHandler<MouseEvent> getSendButtonClickHandler() {
+            return new EventHandler<MouseEvent>() {
+
+                @Override
+                public void handle(MouseEvent event) {
+                    Label sendFileInfoTextLabel = window.getLongTaskInfoTextLabel();
+                    //Отправка загруженного файла в БД
+
+                    //если не выбрали файл, в который будет идти запись
+                    if (!isSelectedFileNameEmpty()) {
+                        sendFileInfoTextLabel.setText("Выберите файл для выгрузки данных");
+                        return;
+                    }
+                    //если файл НЕ был загружен
+                    if (!loadedFileReadyForSend) {
+                        sendFileInfoTextLabel.setText("Выберите файл для загрузки данных");
+                        return;
+                    }
+
+                    if (((loadedFile.getName().matches("В.+-\\d+\\.xls")) ||
+                            (loadedFile.getName().matches("В.+-\\d+\\.xlsx"))) &&
+                            (selectedDataType.equals(DataType.ELECTRICITY))) {
+                        sendFileInfoTextLabel.setText("Выбранная категория и загруженный файл не совпадают");
+                        return;
+                    }
+
+                    if (((loadedFile.getName().matches("Э.+-\\d+\\.xls")) ||
+                            (loadedFile.getName().matches("Э.+-\\d+\\.xlsx"))) &&
+                            (selectedDataType.equals(DataType.WATER))) {
+                        sendFileInfoTextLabel.setText("Выбранная категория и загруженный файл не совпадают");
+                        return;
+                    }
+
+                    if (!loadedFile.exists()) {
+                        sendFileInfoTextLabel.setText("Файл с указанным именем не был найден");
+                        return;
+                    }
+
+                    //если файл есть изначально
+                    if (!isSelectedFileNameIsNewFile()) {
+                        Task<Void> task = new Task<Void>() {
+                            @Override
+                            public Void call() {
+                                Logger logger = Logger.getLogger(getClass().toString(), "call");
+                                try {
+                                    readServerFile();
+                                } catch (Exception e) {
+                                    logger.log(LogCategory.ERROR, "Ошибка обработки файлов: " + e);
+                                    LockMonitor.getLockMonitor().forceDeleteLocks();
+                                }
+                                return null;
+                            }
+
+                            @Override
+                            protected void failed() {
+                                enableWindow();
+                                showUnsuccessfulStartWindow("Ошибка обработки файлов");
+                            }
+                        };
+
+                        task.setOnSucceeded(event1 -> {
+                            enableWindow();
+                            setSuccessLoadWindow();
+                        });
+                        new Thread(task).start();
+                        showLongTaskProcessingInfo("Файл отправляется...");
+
+                    } else //если файла нет
+                    {
+                        createStageForNewFileName();
+                    }
+                    disableWindow();
+                }
+            };
+        }
+
+        public EventHandler<MouseEvent> getExitButtonClickHandler() {
+            return event -> {CommonControllerMethods.exit();};
+        }
+
+        public EventHandler<MouseEvent> getDeleteRegionButtonClickHandler() {
+            return new EventHandler<MouseEvent>() {
+                @Override
+                public void handle(MouseEvent mouseEvent) {
+                    if (selectedServerFileName == null || selectedServerFileName.isEmpty() ||
+                            selectedServerFileName.equals(GuiConstants.NEW_SERVER_FILE_GUI_TEXT)) {
+                        window.getLongTaskInfoTextLabel().setText("Выберите серверный файл");
+                        return;
+                    }
+                    createStageForRegions();
+                }
+            };
+        }
+
+        public ChangeListener<String> getServerFileNamesComboBoxChangeListener() {
+            return new ChangeListener<String>() {
+                @Override
+                public void changed(ObservableValue<? extends String> observableValue, String s, String t1) {
+                    selectedServerFileName = observableValue.getValue();
+                    Button deleteButton = window.getDeleteButton();
+                    if (selectedServerFileName == null || selectedServerFileName.equals("Новый файл")) {
+                        deleteButton.setDisable(true);
+                        return;
+                    }
+                    deleteButton.setDisable(false);
+                }
+            };
+        }
+    }
+*/
 }

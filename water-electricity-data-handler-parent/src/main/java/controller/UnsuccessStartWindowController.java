@@ -14,17 +14,11 @@ public class UnsuccessStartWindowController extends BaseWindowController<Unsucce
     private String errorText;
 
     UnsuccessStartWindowController(UnsuccessStartWindow window, String errorText) {
-        super(window);
         this.errorText = errorText;
     }
 
     public EventHandler<MouseEvent> getExitButtonClickHandler() {
-        return new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent event) {
-                CommonControllerMethods.exit();
-            }
-        };
+        return event -> CommonControllerMethods.exit();
     }
 
     public String getErrorText() {

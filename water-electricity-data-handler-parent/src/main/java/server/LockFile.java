@@ -1,5 +1,8 @@
 package server;
 
+import lombok.Getter;
+
+@Getter
 public class LockFile implements Comparable<LockFile> {
     private String serverFileName;
     private int lockClientIndex;
@@ -14,21 +17,9 @@ public class LockFile implements Comparable<LockFile> {
         this.lockClientIndex = Integer.parseInt(lockFileName.split("_")[1]);
     }
 
-    public int getLockClientIndex() {
-        return lockClientIndex;
-    }
-
-    public LockFile setLockClientIndex(int lockClientIndex) {
-        this.lockClientIndex = lockClientIndex;
-        return this;
-    }
 
     String getLockFileName() {
         return serverFileName + "_" + lockClientIndex + "_" + ".lock";
-    }
-
-    public String getServerFileName() {
-        return serverFileName;
     }
 
     @Override
@@ -58,7 +49,7 @@ public class LockFile implements Comparable<LockFile> {
         return fileName.endsWith(".lock");
     }
 
-    public void decrementClientLockIndex() {
+    void decrementClientLockIndex() {
         lockClientIndex--;
     }
 }
