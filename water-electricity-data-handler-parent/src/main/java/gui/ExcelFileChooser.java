@@ -8,6 +8,9 @@ import java.io.File;
 
 public class ExcelFileChooser extends JFileChooser {
 
+    private static final String XLS_FILE_MASK = ".xls";
+    private static final String XLSX_FILE_MASK = ".xls";
+
     public ExcelFileChooser() {
         FileFilter fileFilterXls = createXlsFileFilter();
         FileFilter fileFilterXlsx = createXlsxFileFilter();
@@ -26,26 +29,26 @@ public class ExcelFileChooser extends JFileChooser {
         return new FileFilter() {
             @Override
             public boolean accept(File file) {
-                return file.isFile() && file.getName().contains(".xls");
+                return file.isFile() && file.getName().contains(XLS_FILE_MASK);
             }
 
             @Override
             public String getDescription() {
-                return ".xls";
+                return XLS_FILE_MASK;
             }
         };
     }
 
-    private FileFilter createXlsxFileFilter(){
+    private FileFilter createXlsxFileFilter() {
         return new FileFilter() {
             @Override
             public boolean accept(File file) {
-                return file.isFile() && file.getName().contains(".xlsx");
+                return file.isFile() && file.getName().contains(XLSX_FILE_MASK);
             }
 
             @Override
             public String getDescription() {
-                return ".xlsx";
+                return XLSX_FILE_MASK;
             }
         };
     }

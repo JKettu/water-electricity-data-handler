@@ -10,7 +10,7 @@ import gui.common.WindowsFactory;
 import gui.window.DeleteRegionFromServerFileWindow;
 import gui.window.ErrorWindow;
 import gui.window.NewServerFileNameInputWindow;
-import gui.window.SuccessLoadWindow;
+import gui.window.SuccessWindow;
 import gui.window.main.MainWindow;
 import handling.XlsFileHandler;
 import handling.XlsxFileHandler;
@@ -21,8 +21,6 @@ import javafx.concurrent.WorkerStateEvent;
 import javafx.event.EventHandler;
 import javafx.scene.control.ComboBox;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.VBox;
-import lombok.NoArgsConstructor;
 import lombok.val;
 import server.FTPController;
 
@@ -32,13 +30,12 @@ import java.util.List;
 
 import static common.CommonUtils.isNullOrEmpty;
 
-@NoArgsConstructor
 public class MainWindowController extends BaseWindowController<MainWindow> {
 
     private static final String LOADING_SERVER_FILES_TEXT_LABEL = "Загружаем список серверных файлов...";
-    public static final String NETWORK_CONNECTION_ERROR_TEXT_LABEL =
+    private static final String NETWORK_CONNECTION_ERROR_TEXT_LABEL =
             "Нет подключения к Интернету. Выполните подключение и перезапустите программу";
-    public static final String SELECT_SERVER_FILE_TEXT_LABEL = "Выберите серверный файл";
+    private static final String SELECT_SERVER_FILE_TEXT_LABEL = "Выберите серверный файл";
 
     private XlsxFileHandler xlsxFileHandler;
     private File loadedFile;
@@ -49,7 +46,7 @@ public class MainWindowController extends BaseWindowController<MainWindow> {
     private List<String> serverFileNames;
     private XlsFileHandler xlsFileHandler;
 
-    public MainWindowController(MainWindow window) {
+    public MainWindowController() {
         xlsxFileHandler = new XlsxFileHandler();
         serverFileNames = new ArrayList<>();
         ObservableListWrapper<String> serverFileNamesObservableList = new ObservableListWrapper<>(serverFileNames);
@@ -59,17 +56,18 @@ public class MainWindowController extends BaseWindowController<MainWindow> {
         mainWindowServerFilesBox.setItems(serverFileNamesObservableList);
     }
 
+
     private void showLongTaskProcessingInfo(String info) {
         window.setCurrentTaskInfoText(info);
         window.showProgressBar();
     }
 
-    private void disableWindowElements() {
+    public void disableWindowElements() {
         window.getSendFileButton().setDisable(true);
 
     }
 
-    void enableWindowElements() {
+    public void enableWindowElements() {
         window.getSendFileButton().setDisable(false);
         //        window.getWaterRadioButton().setDisable(false);
         //        window.getElectricityRadioButton().setDisable(false);
@@ -84,6 +82,18 @@ public class MainWindowController extends BaseWindowController<MainWindow> {
 
     }
 
+
+    //окно после успешной загрузки
+    void showSuccessWindow(String text) {
+        window.clearWindow();
+        selectedServerFileName = "";
+        setLoadedFileEqualsNull();
+        val successWindowController =
+                WindowsFactory.createWindow(SuccessWindow.class, SuccessWindowController.class);
+        successWindowController.setMainWindowController(this);
+        successWindowController.setSuccessText(text);
+        successWindowController.showWindow();
+    }
 
     //Получить список файлов с сервера
     private List<String> getServerFileNames() {
@@ -100,27 +110,12 @@ public class MainWindowController extends BaseWindowController<MainWindow> {
 
     void updateWindow() {
         window.reloadWindowElements();
-        window.bindController(this);
     }
 
     void setSelectedServerFileName(String selectedServerFileName) {
         this.selectedServerFileName = selectedServerFileName;
     }
 
-
-    //окно после успешной загрузки
-    void showSuccessLoadWindow(String textForLabel) {
-        window.clearWindow();
-        selectedServerFileName = "";
-        setLoadedFileEqualsNull();
-        SuccessLoadWindow successLoadWindow = new SuccessLoadWindow(textForLabel);
-        SuccessLoadWindowController successLoadWindowController =
-                new SuccessLoadWindowController(successLoadWindow, this);
-        successLoadWindow.bindController(successLoadWindowController);
-        VBox successLoadWindowRoot = successLoadWindow.getRootField();//место размещения
-        //VBox mainWindowRoot = window.getRootField();
-        //mainWindowRoot.getChildren().add(successLoadWindowRoot);
-    }
 
     void afterFileCreation() {
         Task<Void> task = new Task<Void>() {
@@ -165,7 +160,7 @@ public class MainWindowController extends BaseWindowController<MainWindow> {
     }
 
 
-    private void showErrorWindow(String errorText) {
+    public void showErrorWindow(String errorText) {
         window.clearWindow();
         selectedServerFileName = "";
         setLoadedFileEqualsNull();
@@ -249,51 +244,51 @@ public class MainWindowController extends BaseWindowController<MainWindow> {
         if (xlsFileHandler != null) { //если был xls файл
             List<String> xlsFileResultArray = xlsFileHandler.getErrorsArray();
             if (xlsFileResultArray.size() == 0) {
-                showSuccessLoadWindow(
+                showSuccessWindow(
                         "Не удалось отправить файл с компьютера на сервер. Закройте файл и попробуте заново.");
                 xlsFileHandler.getErrorsArray().clear();
             } else {
                 String xslFileFirstError = xlsFileResultArray.get(0);
                 switch (xslFileFirstError) {
                     case "is null":
-                        showSuccessLoadWindow("Не удалось считать файл с компьютера.");
+                        showSuccessWindow("Не удалось считать файл с компьютера.");
                         xlsFileHandler.getErrorsArray().clear();
                         break;
                     case "DISCONNECTED":
-                        showSuccessLoadWindow("Соединение с сервером было разорвано.");
+                        showSuccessWindow("Соединение с сервером было разорвано.");
                         xlsFileHandler.getErrorsArray().clear();
                         break;
                     case "LOGOUT":
-                        showSuccessLoadWindow("Не удалось зайти на сервер.");
+                        showSuccessWindow("Не удалось зайти на сервер.");
                         xlsFileHandler.getErrorsArray().clear();
                         break;
                     case "WRONG_TYPE":
-                        showSuccessLoadWindow(
+                        showSuccessWindow(
                                 "Структура загружаемого файла не совпадает со структурой файла, хранящегося на сервере.");
                         xlsFileHandler.getErrorsArray().clear();
                         break;
                     case "EMPTY_FILE":
-                        showSuccessLoadWindow("Файл не был добавлен на сервер (пустой файл).");
+                        showSuccessWindow("Файл не был добавлен на сервер (пустой файл).");
                         xlsFileHandler.getErrorsArray().clear();
                         break;
                     case "FILE_FROM_SERVER_WAS_NOT_FOUND":
-                        showSuccessLoadWindow("Не удалось получить файл с сервера.");
+                        showSuccessWindow("Не удалось получить файл с сервера.");
                         xlsFileHandler.getErrorsArray().clear();
                         break;
                     case "EXISTED_FILE":
-                        showSuccessLoadWindow("Этот файл уже был добавлен ранее.");
+                        showSuccessWindow("Этот файл уже был добавлен ранее.");
                         xlsFileHandler.getErrorsArray().clear();
                         break;
                     case "FILE_NOT_LOADED":
-                        showSuccessLoadWindow("Не удалось загрузить файл на сервер.");
+                        showSuccessWindow("Не удалось загрузить файл на сервер.");
                         xlsFileHandler.getErrorsArray().clear();
                         break;
                     case "WRONG_CELL_TYPE":
-                        showSuccessLoadWindow("Ошибка при чтении ячейки " + xlsFileResultArray.get(1));
+                        showSuccessWindow("Ошибка при чтении ячейки " + xlsFileResultArray.get(1));
                         xlsFileHandler.getErrorsArray().clear();
                         break;
                     case "FILE_WAS_LOADED":
-                        showSuccessLoadWindow("Файл был успешно добавлен на сервер.");
+                        showSuccessWindow("Файл был успешно добавлен на сервер.");
                         xlsFileHandler.getErrorsArray().clear();
                         break;
                 }
@@ -301,57 +296,57 @@ public class MainWindowController extends BaseWindowController<MainWindow> {
         } else if (xlsxFileHandler != null) {
             List<String> xlsxFileHandlerErrorsArray = xlsxFileHandler.getErrorsArray();
             if (xlsxFileHandlerErrorsArray.size() == 0) {
-                showSuccessLoadWindow(
+                showSuccessWindow(
                         "Не удалось отправить файл с компьютера на сервер. Закройте файл и попробуте заново.");
                 xlsxFileHandler.getErrorsArray().clear();
             } else {
                 String firstError = xlsxFileHandlerErrorsArray.get(0);
                 switch (firstError) {
                     case "is null":
-                        showSuccessLoadWindow("Не удалось считать файл с компьютера.");
+                        showSuccessWindow("Не удалось считать файл с компьютера.");
                         xlsxFileHandler.getErrorsArray().clear();
                         break;
                     case "DISCONNECTED":
-                        showSuccessLoadWindow("Соединение с сервером было разорвано.");
+                        showSuccessWindow("Соединение с сервером было разорвано.");
                         xlsxFileHandler.getErrorsArray().clear();
                         break;
                     case "LOGOUT":
-                        showSuccessLoadWindow("Не удалось зайти на сервер.");
+                        showSuccessWindow("Не удалось зайти на сервер.");
                         xlsxFileHandler.getErrorsArray().clear();
                         break;
                     case "WRONG_TYPE":
-                        showSuccessLoadWindow(
+                        showSuccessWindow(
                                 "Структура загружаемого файла не совпадает со структурой файла, хранящегося на сервере.");
                         xlsxFileHandler.getErrorsArray().clear();
                         break;
                     case "EMPTY_FILE":
-                        showSuccessLoadWindow("Файл не был добавлен на сервер (пустой файл).");
+                        showSuccessWindow("Файл не был добавлен на сервер (пустой файл).");
                         xlsxFileHandler.getErrorsArray().clear();
                         break;
                     case "FILE_FROM_SERVER_WAS_NOT_FOUND":
-                        showSuccessLoadWindow("Не удалось получить файл с сервера.");
+                        showSuccessWindow("Не удалось получить файл с сервера.");
                         xlsxFileHandler.getErrorsArray().clear();
                         break;
                     case "EXISTED_FILE":
-                        showSuccessLoadWindow("Этот файл уже был добавлен ранее.");
+                        showSuccessWindow("Этот файл уже был добавлен ранее.");
                         xlsxFileHandler.getErrorsArray().clear();
                         break;
                     case "FILE_NOT_LOADED":
-                        showSuccessLoadWindow("Не удалось загрузить файл на сервер.");
+                        showSuccessWindow("Не удалось загрузить файл на сервер.");
                         xlsxFileHandler.getErrorsArray().clear();
                         break;
                     case "WRONG_CELL_TYPE":
-                        showSuccessLoadWindow("Ошибка при чтении ячейки " + xlsxFileHandlerErrorsArray.get(1));
+                        showSuccessWindow("Ошибка при чтении ячейки " + xlsxFileHandlerErrorsArray.get(1));
                         xlsxFileHandler.getErrorsArray().clear();
                         break;
                     case "FILE_WAS_LOADED":
-                        showSuccessLoadWindow("Файл был успешно добавлен на сервер.");
+                        showSuccessWindow("Файл был успешно добавлен на сервер.");
                         xlsxFileHandler.getErrorsArray().clear();
                         break;
                 }
             }
         } else {
-            showSuccessLoadWindow("Возникла ошибка на сервере. Попробуйте загрузить файл ещё раз.");
+            showSuccessWindow("Возникла ошибка на сервере. Попробуйте загрузить файл ещё раз.");
         }
     }
 
@@ -411,6 +406,10 @@ public class MainWindowController extends BaseWindowController<MainWindow> {
     @Override
     public void showWindow() {
         window.show();
+    }
+
+    public void setSelectedDataType(DataType selectedDataType) {
+        this.selectedDataType = selectedDataType;
     }
 
 /*

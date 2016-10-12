@@ -72,11 +72,11 @@ public class DeleteRegionFromServerFileWindowController extends BaseWindowContro
                 }
             };
             task.setOnSucceeded(workerStateEvent -> {
-                mainWindowController.showSuccessLoadWindow("Выбранный регион был удалён из файла");
+                mainWindowController.showSuccessWindow("Выбранный регион был удалён из файла");
                 window.getStage().close();
             });
             task.setOnFailed(workerStateEvent -> {
-                mainWindowController.showSuccessLoadWindow("Не удалось удалить регион из файла");
+                mainWindowController.showErrorWindow("Не удалось удалить регион из файла");
                 window.getStage().close();
             });
             new Thread(task).start();
@@ -107,7 +107,7 @@ public class DeleteRegionFromServerFileWindowController extends BaseWindowContro
             regionsComboBox.show();
         });
         task.setOnFailed(workerStateEvent -> {
-            mainWindowController.showSuccessLoadWindow(ERROR_GETTING_REGIONS);
+            mainWindowController.showSuccessWindow(ERROR_GETTING_REGIONS);
             window.getStage().close();
         });
         new Thread(task).start();

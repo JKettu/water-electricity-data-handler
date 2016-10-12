@@ -1,7 +1,6 @@
 package gui.window.main;
 
 import controller.MainWindowController;
-import gui.common.GuiConstants;
 import gui.window.BaseWindow;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -11,20 +10,23 @@ import javafx.scene.control.ProgressBar;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import lombok.Getter;
-import lombok.SneakyThrows;
 import lombok.val;
 
 import static gui.common.GuiCommonLib.*;
 
-@Getter
 public class MainWindow extends BaseWindow<MainWindowController> {
     private static final String SEND_FILE_BUTTON_TEXT = "Отправить";
     private static final String DELETE_REGION_BUTTON_TEXT = "Удалить регион из файла";
     private static final String EXIT_BUTTON_TEXT = "Выход";
-    private static final int SEND_FILE_AND_DELETE_REGION_BUTTONS_BOX_SPACING = 50;
-    private static final int MAIN_BOX_SPACING = 50;
+
+    private HBox sendFileAndDeleteRegionButtonsBox;
+    private HBox mainBox;
+    private HBox exitButtonBox;
+    private VBox currentTaskInfoTextBox;
 
     private VBox rootBox;
+
+    @Getter
     private Scene scene;
 
     private Label currentTaskInfoTextLabel;
@@ -39,52 +41,25 @@ public class MainWindow extends BaseWindow<MainWindowController> {
     private MainWindowRightBlock rightBlock;
 
     @Override
-    public void show() {
+    protected void buildWindow() {
         createRootBox();
-        buildScene();
-        reloadWindowElements();
-    }
-
-    @SneakyThrows
-    private void buildScene() {
-        val screenSize = getScreenSize();
-        val screenWidth = screenSize.getWidth();
-        val screenHeight = screenSize.getHeight();
-        scene = new Scene(rootBox, screenWidth / 2, screenHeight / 2);
-        val styleResource = MainWindow.class.getResource(GuiConstants.WINDOW_STYLE_CSS_RESOURCE_PATH);
-        scene.setUserAgentStylesheet(styleResource.toExternalForm());
-    }
-
-    public void reloadWindowElements() {
-        clearWindow();
-
         createButtons();
         createLongTaskInfoTextLabel();
         createProgressBarBox();
-
-        val mainBox = createMainBox();
-        val exitButtonBox = wrapNodeToCenteredHBox(exitButton);
-        val sendFileButtonBox = wrapNodeToCenteredHBox(sendFileButton);
-        val deleteRegionButtonBox = wrapNodeToCenteredHBox(deleteRegionButton);
-        val currentTaskInfoTextBox = wrapNodeToCenteredVBox(currentTaskInfoTextLabel);
-
-        val sendFileAndDeleteRegionButtonsBox = new HBox();
-        sendFileAndDeleteRegionButtonsBox.getChildren().addAll(sendFileButtonBox, deleteRegionButtonBox);
-        sendFileAndDeleteRegionButtonsBox.setAlignment(Pos.CENTER);
-        sendFileAndDeleteRegionButtonsBox.setSpacing(SEND_FILE_AND_DELETE_REGION_BUTTONS_BOX_SPACING);
-
-        fillRootBox(mainBox,
-                currentTaskInfoTextBox,
-                sendFileAndDeleteRegionButtonsBox,
-                exitButtonBox);
+        createContainers();
+        scene = buildScene(rootBox);
     }
 
 
-    public void clearWindow() {
-        val windowElements = rootBox.getChildren();
-        windowElements.clear();
+    private void createRootBox() {
+        rootBox = new VBox();
+        val screenSize = getScreenSize();
+        val screenWidth = screenSize.getWidth();
+        val screenHeight = screenSize.getHeight();
+        rootBox.setMinSize(screenHeight / 3, screenWidth / 3);
+        rootBox.setAlignment(Pos.CENTER);
+        rootBox.layout();
     }
-
 
     private void createButtons() {
         createSendFileButton();
@@ -101,36 +76,26 @@ public class MainWindow extends BaseWindow<MainWindowController> {
         progressBarBox.setAlignment(Pos.CENTER);
     }
 
+    private void createContainers() {
+        createMainBox();
+        exitButtonBox = wrapNodeToCenteredHBox(exitButton);
+        val sendFileButtonBox = wrapNodeToCenteredHBox(sendFileButton);
+        val deleteRegionButtonBox = wrapNodeToCenteredHBox(deleteRegionButton);
+        currentTaskInfoTextBox = wrapNodeToCenteredVBox(currentTaskInfoTextLabel);
 
-    private HBox createMainBox() {
-        val mainBox = new HBox();
+        sendFileAndDeleteRegionButtonsBox = new HBox();
+        sendFileAndDeleteRegionButtonsBox.getChildren().addAll(sendFileButtonBox, deleteRegionButtonBox);
+        sendFileAndDeleteRegionButtonsBox.setAlignment(Pos.CENTER);
+        sendFileAndDeleteRegionButtonsBox.setSpacing(50);
+    }
+
+    private void createMainBox() {
+        mainBox = new HBox();
         leftBlock = new MainWindowLeftBlock();
         rightBlock = new MainWindowRightBlock();
         mainBox.getChildren().addAll(leftBlock, rightBlock);
-        mainBox.setSpacing(MAIN_BOX_SPACING);
+        mainBox.setSpacing(50);
         mainBox.setAlignment(Pos.CENTER);
-        return mainBox;
-    }
-
-
-    private void createRootBox() {
-        rootBox = new VBox();
-        val screenSize = getScreenSize();
-        val screenWidth = screenSize.getWidth();
-        val screenHeight = screenSize.getHeight();
-        rootBox.setMinSize(screenHeight / 3, screenWidth / 3);
-        rootBox.setAlignment(Pos.CENTER);
-        rootBox.layout();
-    }
-
-    private void fillRootBox(HBox mainBox, VBox sendFileInfoTextBox, HBox sendButtonBox, HBox exitButtonBox) {
-        rootBox.getChildren().addAll(mainBox,
-                sendFileInfoTextBox,
-                progressBarBox,
-                createNewLineLabel(),
-                sendButtonBox,
-                createNewLineLabel(),
-                exitButtonBox);
     }
 
 
@@ -147,6 +112,29 @@ public class MainWindow extends BaseWindow<MainWindowController> {
         sendFileButton = new Button(SEND_FILE_BUTTON_TEXT);
     }
 
+
+    @Override
+    public void show() {
+        val windowElements = rootBox.getChildren();
+        windowElements.clear();
+        rootBox.getChildren().addAll(mainBox,
+                currentTaskInfoTextBox,
+                progressBarBox,
+                createNewLineLabel(),
+                sendFileAndDeleteRegionButtonsBox,
+                createNewLineLabel(),
+                exitButtonBox);
+    }
+
+    public void reloadWindowElements() {
+        buildWindow();
+        show();
+    }
+
+    public void clearWindow() {
+        val windowElements = rootBox.getChildren();
+        windowElements.clear();
+    }
 
     public void setCurrentTaskInfoText(String text) {
         currentTaskInfoTextLabel.setText(text);
@@ -166,6 +154,7 @@ public class MainWindow extends BaseWindow<MainWindowController> {
     public void hideProgressBar() {
         progressBarBox.getChildren().clear();
     }
+
 
     @Override
     public void bindController(MainWindowController controller) {

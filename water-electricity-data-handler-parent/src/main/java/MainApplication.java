@@ -15,9 +15,9 @@ public class MainApplication extends Application {
     public void start(Stage primaryStage) throws Exception {
         primaryStage.setTitle(APPLICATION_TITLE);
         primaryStage.setResizable(false);
-        createMainWindow(primaryStage);
         addShutdownHook();
         processStartupActions();
+        createMainWindow(primaryStage);
         primaryStage.show();
     }
 

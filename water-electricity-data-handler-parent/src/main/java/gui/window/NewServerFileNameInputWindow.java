@@ -1,82 +1,68 @@
 package gui.window;
 
 import controller.NewServerFileNameInputWindowController;
+import gui.common.GuiCommonLib;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.SceneBuilder;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import javafx.scene.layout.VBoxBuilder;
-import javafx.stage.Modality;
 import javafx.stage.Stage;
+import lombok.Setter;
+import lombok.val;
 
-import java.awt.*;
+import static gui.common.GuiCommonLib.createNewLineLabel;
+import static gui.common.GuiCommonLib.wrapNodeToCenteredHBox;
 
-import static gui.common.GuiCommonLib.*;
-
-/**
- * Created by Anton on 20.07.2016.
- */
 public class NewServerFileNameInputWindow extends BaseWindow<NewServerFileNameInputWindowController> {
 
-    private VBox rootField;
+    private static final String INPUT_NEW_FILE_NAME_TEXT_LABEL =
+            "    Введите название нового файла.\nВнимание! Название вводится без расширения.\n";
+    private static final String INPUT_TEXT_FIELD_PROMPT_TEXT = "Введите название файла без расширения";
+    private static final String STAGE_TITLE = "Создание нового файла";
+    private static final String CREATE_BUTTON_TEXT = "Создать";
+
+    private VBox rootBox;
+    private VBox mainBox;
     private Label errorTextLabel;
     private Scene scene;
     private TextField fileNameInputTextField;
     private Button createButton;
     private Stage stage;
 
-    public NewServerFileNameInputWindow(Scene ownerScene) {
-
-        createRootField();
-        buildScene();
-        //элементы сцены
-        VBox main = createMainBox();
-        rootField.getChildren().add(main);
-        createStage(ownerScene);
-    }
+    @Setter
+    private Scene ownerScene;
 
     @Override
-    public void bindController(NewServerFileNameInputWindowController controller) {
-        super.bindController(controller);
-        createButton.setOnMouseClicked(controller.getCreateButtonClickHandler());
+    protected void buildWindow() {
+        createRootBox();
+        createMainBox();
+        scene = GuiCommonLib.buildScene(rootBox);
     }
 
 
-    public TextField getFileNameInputTextField() {
-        return fileNameInputTextField;
-    }
-
-    public Label getErrorTextLabel() {
-        return errorTextLabel;
-    }
-
-    public Stage getStage() {
-        return stage;
-    }
-
-
-    private VBox createMainBox() {
-
-        VBox mainBox = new VBox();
+    private void createMainBox() {
+        mainBox = new VBox();
 
         createFileNameInputTextField();
         createErrorTextLabel();
         createCreateButton();
-        HBox createCreateButtonBox = wrapNodeToCenteredHBox(createButton);
+        val createCreateButtonBox = wrapNodeToCenteredHBox(createButton);
 
-        HBox inputFileNameLabelBox = new HBox();
-        Label label = new Label("    Введите название нового файла.\nВнимание! Название вводится без расширения.\n");
+        val inputFileNameLabelBox = new HBox();
+        val label = new Label(INPUT_NEW_FILE_NAME_TEXT_LABEL);
         label.setAlignment(Pos.CENTER);
         inputFileNameLabelBox.getChildren().add(label);
         inputFileNameLabelBox.setAlignment(Pos.CENTER);
 
-        mainBox.getChildren().addAll(new Label("\n\n\n"), inputFileNameLabelBox, fileNameInputTextField, errorTextLabel, createCreateButtonBox);
+        mainBox.getChildren().addAll(new Label("\n\n\n"),
+                inputFileNameLabelBox,
+                fileNameInputTextField,
+                errorTextLabel,
+                createCreateButtonBox);
         mainBox.setAlignment(Pos.CENTER);
-        return mainBox;
     }
 
     private void createErrorTextLabel() {
@@ -85,45 +71,35 @@ public class NewServerFileNameInputWindow extends BaseWindow<NewServerFileNameIn
     }
 
     private void createFileNameInputTextField() {
-        fileNameInputTextField = new TextField(); //поле для чтения имени нового файла
-        fileNameInputTextField.setPromptText("Введите название файла без расширения");
+        fileNameInputTextField = new TextField();
+        fileNameInputTextField.setPromptText(INPUT_TEXT_FIELD_PROMPT_TEXT);
         fileNameInputTextField.setAlignment(Pos.CENTER);
         fileNameInputTextField.setEditable(true);
         fileNameInputTextField.setMinWidth(250);
         fileNameInputTextField.setMaxWidth(250);
     }
 
-    private void createRootField() {
-        VBoxBuilder vBoxBuilder = VBoxBuilder.create();
-        rootField = vBoxBuilder.build();
-        rootField.layout();
-    }
-
-    private void createStage(Scene ownerScene) {
-        stage = new Stage();
-        stage.setTitle("Создание нового файла");
-        stage.setScene(scene);
-        stage.initModality(Modality.WINDOW_MODAL);
-        stage.initOwner(ownerScene.getWindow());
-        stage.show();
-    }
-
-    private void buildScene() {
-        SceneBuilder sceneBuilder = SceneBuilder.create();
-        sceneBuilder.fill(javafx.scene.paint.Paint.valueOf("gray"));
-        sceneBuilder.stylesheets(this.getClass().getResource("WindowStyle.css").toExternalForm());
-        Dimension screenSize = getScreenSize();
-        int screenWidth = screenSize.width;
-        int screenHeight = screenSize.height;
-        sceneBuilder.height(screenHeight / 3);
-        sceneBuilder.width(screenWidth / 3);
-        sceneBuilder.root(rootField);
-        scene = sceneBuilder.build();
+    private void createRootBox() {
+        rootBox = new VBox();
+        rootBox.layout();
     }
 
     private void createCreateButton() {
-        createButton = new Button("Создать");
+        createButton = new Button(CREATE_BUTTON_TEXT);
         createButton.setAlignment(Pos.CENTER);
+    }
+
+
+    @Override
+    public void bindController(NewServerFileNameInputWindowController controller) {
+        super.bindController(controller);
+        createButton.setOnMouseClicked(controller.getCreateButtonClickHandler());
+    }
+
+    @Override
+    public void show() {
+        rootBox.getChildren().add(mainBox);
+        stage = GuiCommonLib.createStage(STAGE_TITLE, scene, ownerScene);
     }
 
 }
