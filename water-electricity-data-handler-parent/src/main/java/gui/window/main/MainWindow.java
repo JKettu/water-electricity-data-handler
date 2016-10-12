@@ -1,5 +1,6 @@
 package gui.window.main;
 
+import com.sun.javafx.collections.ObservableListWrapper;
 import controller.MainWindowController;
 import gui.window.BaseWindow;
 import javafx.geometry.Pos;
@@ -12,6 +13,8 @@ import javafx.scene.layout.VBox;
 import lombok.Getter;
 import lombok.val;
 
+import java.util.List;
+
 import static gui.common.GuiCommonLib.*;
 
 public class MainWindow extends BaseWindow<MainWindowController> {
@@ -19,26 +22,33 @@ public class MainWindow extends BaseWindow<MainWindowController> {
     private static final String DELETE_REGION_BUTTON_TEXT = "Удалить регион из файла";
     private static final String EXIT_BUTTON_TEXT = "Выход";
 
+    @Getter
     private HBox sendFileAndDeleteRegionButtonsBox;
-    private HBox mainBox;
-    private HBox exitButtonBox;
-    private VBox currentTaskInfoTextBox;
-
-    private VBox rootBox;
 
     @Getter
     private Scene scene;
 
-    private Label currentTaskInfoTextLabel;
-
+    @Getter
     private Button sendFileButton;
-    private Button exitButton;
+
+    @Getter
     private Button deleteRegionButton;
 
-    private VBox progressBarBox;
+    @Getter
+    private Button exitButton;
 
+    @Getter
     private MainWindowLeftBlock leftBlock;
+
+    @Getter
     private MainWindowRightBlock rightBlock;
+
+    private HBox mainBox;
+    private HBox exitButtonBox;
+    private VBox currentTaskInfoTextBox;
+    private VBox rootBox;
+    private Label currentTaskInfoTextLabel;
+    private VBox progressBarBox;
 
     @Override
     protected void buildWindow() {
@@ -155,6 +165,11 @@ public class MainWindow extends BaseWindow<MainWindowController> {
         progressBarBox.getChildren().clear();
     }
 
+    public void setServerFileNames(List<String> names) {
+        ObservableListWrapper<String> serverFileNamesObservableList = new ObservableListWrapper<>(names);
+        val mainWindowServerFilesBox = rightBlock.getServerFilesBox();
+        mainWindowServerFilesBox.setItems(serverFileNamesObservableList);
+    }
 
     @Override
     public void bindController(MainWindowController controller) {

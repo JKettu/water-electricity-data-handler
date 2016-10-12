@@ -9,7 +9,7 @@ import lombok.val;
 import static gui.common.GuiCommonLib.createNewLineLabel;
 
 @Getter
-class MainWindowLeftBlock extends VBox {
+public class MainWindowLeftBlock extends VBox {
     private static final String RADIO_BUTTON_STYLE = ".radio";
     private static final String WATER_BUTTON_TEXT = "Вода";
     private static final String ELECTRICITY_BUTTON_TEXT = "Электричество";

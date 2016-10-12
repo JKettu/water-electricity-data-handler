@@ -8,7 +8,7 @@ import lombok.Getter;
 import static gui.common.GuiCommonLib.createNewLineLabel;
 
 @Getter
-class MainWindowRightBlock extends VBox {
+public class MainWindowRightBlock extends VBox {
     private static final String SELECT_SERVER_FILE_TEXT_LABEL = "Выберите файл с сервера";
 
     private ComboBox<String> serverFilesBox;

@@ -9,6 +9,7 @@ import handling.util.HandlingType;
 import javafx.beans.value.ObservableValue;
 import javafx.concurrent.Task;
 import javafx.scene.input.MouseEvent;
+import lombok.Getter;
 import lombok.Setter;
 import lombok.val;
 
@@ -20,10 +21,13 @@ public class DeleteRegionFromServerFileWindowController extends BaseWindowContro
     private static final String ERROR_GETTING_REGIONS = "Не удалось получить список регионов";
     private static final String GETTING_REGIONS_PLEASE_WAIT_TEXT = "Получаем список регионов. Пожалуйста, подождите";
     private static final String DELETING_REGION_PLEASE_WAIT_TEXT = "Удаляем регион. Пожалуйста, подождите";
+    private static final String SUCCESSFUL_REGION_DELETING_TEXT = "Выбранный регион был удалён из файла";
+    private static final String FAILED_REGION_DELETING = "Не удалось удалить регион из файла";
 
     private Integer selectedRegion;
-    private List<Integer> regions;
+    private List<Integer> loadedRegions;
 
+    @Getter
     @Setter
     private MainWindowController mainWindowController;
 
@@ -36,8 +40,6 @@ public class DeleteRegionFromServerFileWindowController extends BaseWindowContro
     private void enableWindowElements() {
         window.getRegionsComboBox().setDisable(false);
         window.getDeleteRegionButton().setDisable(false);
-        window.getProgressBarBox().getChildren().clear();
-        window.getCurrentTaskInfoLabel().setText("");
     }
 
     private void showLongTaskInfo(String info) {
@@ -47,40 +49,40 @@ public class DeleteRegionFromServerFileWindowController extends BaseWindowContro
 
 
     public void processDeleteRegionButtonClick(MouseEvent mouseEvent) {
-        val errorTextLabel = window.getCurrentTaskInfoLabel();
         if (selectedRegion == null) {
-            errorTextLabel.setText(SELECT_DELETING_REGION);
-        } else {
-            showLongTaskInfo(DELETING_REGION_PLEASE_WAIT_TEXT);
-            disableWindowElements();
-
-            val task = new Task<Void>() {
-                @Override
-                protected Void call() throws Exception {
-                    String serverFileName = mainWindowController.getServerFileName();
-                    XlsFileHandler xlsFileHandler = new XlsFileHandler(selectedRegion,
-                            serverFileName);
-                    DataType fileType = xlsFileHandler.getHeadlineFromServerFile(serverFileName);
-                    if (fileType == null) {
-                        xlsFileHandler.getErrorsArray().add("FAILED_REGION_DELETION");
-                    } else if (fileType.equals(DataType.WATER)) {
-                        xlsFileHandler.processWaterFileHandling(HandlingType.DELETE_REGION);
-                    } else if (fileType.equals(DataType.ELECTRICITY)) {
-                        xlsFileHandler.processElectricityFileHandling(HandlingType.DELETE_REGION);
-                    }
-                    return null;
-                }
-            };
-            task.setOnSucceeded(workerStateEvent -> {
-                mainWindowController.showSuccessWindow("Выбранный регион был удалён из файла");
-                window.getStage().close();
-            });
-            task.setOnFailed(workerStateEvent -> {
-                mainWindowController.showErrorWindow("Не удалось удалить регион из файла");
-                window.getStage().close();
-            });
-            new Thread(task).start();
+            window.setCurrentTaskInfo(SELECT_DELETING_REGION);
+            return;
         }
+        showLongTaskInfo(DELETING_REGION_PLEASE_WAIT_TEXT);
+        disableWindowElements();
+
+        val task = new Task<Void>() {
+            @Override
+            protected Void call() throws Exception {
+                val serverFileName = mainWindowController.getServerFileName();
+                val xlsFileHandler = new XlsFileHandler(selectedRegion,
+                        serverFileName);
+                val fileType = xlsFileHandler.getHeadlineFromServerFile(serverFileName);
+                if (fileType == null) {
+                    xlsFileHandler.getErrorsArray().add("FAILED_REGION_DELETION");
+                } else if (fileType.equals(DataType.WATER)) {
+                    xlsFileHandler.processWaterFileHandling(HandlingType.DELETE_REGION);
+                } else if (fileType.equals(DataType.ELECTRICITY)) {
+                    xlsFileHandler.processElectricityFileHandling(HandlingType.DELETE_REGION);
+                }
+                return null;
+            }
+        };
+        task.setOnSucceeded(workerStateEvent -> {
+            mainWindowController.showSuccessWindow(SUCCESSFUL_REGION_DELETING_TEXT);
+            window.getStage().close();
+        });
+        task.setOnFailed(workerStateEvent -> {
+            mainWindowController.showErrorWindow(FAILED_REGION_DELETING);
+            window.getStage().close();
+        });
+        new Thread(task).start();
+
     }
 
     public void processRegionsComboBoxValueChanging(ObservableValue<? extends Integer> observable, Integer oldValue,
@@ -97,13 +99,15 @@ public class DeleteRegionFromServerFileWindowController extends BaseWindowContro
             @Override
             protected Void call() throws Exception {
                 String serverFileName = mainWindowController.getServerFileName();
-                regions = ServerFilesUtils.getRegions(serverFileName);
+                loadedRegions = ServerFilesUtils.getRegions(serverFileName);
                 return null;
             }
         };
         task.setOnSucceeded(workerStateEvent -> {
-            regionsComboBox.setItems(new ObservableListWrapper<>(regions));
+            regionsComboBox.setItems(new ObservableListWrapper<>(loadedRegions));
             enableWindowElements();
+            window.hideProgressBar();
+            window.setCurrentTaskInfo("");
             regionsComboBox.show();
         });
         task.setOnFailed(workerStateEvent -> {

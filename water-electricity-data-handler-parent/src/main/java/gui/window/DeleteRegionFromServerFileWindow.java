@@ -11,12 +11,11 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import javafx.stage.Modality;
 import javafx.stage.Stage;
+import lombok.Getter;
 import lombok.val;
 
-import static gui.common.GuiCommonLib.createNewLineLabel;
-import static gui.common.GuiCommonLib.getScreenSize;
+import static gui.common.GuiCommonLib.*;
 
 public class DeleteRegionFromServerFileWindow extends BaseWindow<DeleteRegionFromServerFileWindowController> {
 
@@ -24,21 +23,26 @@ public class DeleteRegionFromServerFileWindow extends BaseWindow<DeleteRegionFro
     private static final String DELETE_REGION_STAGE_TITLE = "Удаление региона из серверного файла";
     private static final String SELECT_DELETING_REGION_TEXT_LABEL = "Выберите регион, который хотите удалить";
 
+    @Getter
+    private Button deleteRegionButton;
+
+    @Getter
+    private ComboBox<Integer> regionsComboBox;
+
+    @Getter
+    private Stage stage;
+
     private VBox rootBox;
     private VBox mainBox;
     private Label currentTaskInfoLabel;
-    private Button deleteRegionButton;
-    private ComboBox<Integer> regionsComboBox;
     private VBox progressBarBox;
     private Scene scene;
-    private Stage stage;
 
     @Override
     protected void buildWindow() {
         createRootBox();
         buildScene();
         createMainBox();
-        rootBox.getChildren().addAll(mainBox);
     }
 
 
@@ -128,16 +132,6 @@ public class DeleteRegionFromServerFileWindow extends BaseWindow<DeleteRegionFro
         progressBarBox.getChildren().clear();
     }
 
-    public void createStage(Scene ownerScene) {
-        stage = new Stage();
-        stage.setTitle(DELETE_REGION_STAGE_TITLE);
-        stage.setScene(scene);
-        stage.initModality(Modality.WINDOW_MODAL);
-        stage.initOwner(ownerScene.getWindow());
-        stage.show();
-    }
-
-
     @Override
     public void bindController(DeleteRegionFromServerFileWindowController controller) {
         super.bindController(controller);
@@ -148,7 +142,11 @@ public class DeleteRegionFromServerFileWindow extends BaseWindow<DeleteRegionFro
 
     @Override
     public void show() {
-        rootBox.getChildren().add(mainBox);
+        val mainWindowController = controller.getMainWindowController();
+        val mainWindow = mainWindowController.getWindow();
+        val ownerScene = mainWindow.getScene();
+        stage = createStage(DELETE_REGION_STAGE_TITLE, scene, ownerScene);
+        rootBox.getChildren().addAll(mainBox);
     }
 
 }

@@ -1,47 +1,37 @@
 package controller;
 
 import gui.window.NewServerFileNameInputWindow;
-import javafx.event.EventHandler;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
 import javafx.scene.input.MouseEvent;
-import javafx.stage.Stage;
+import lombok.Setter;
+import lombok.val;
 
 import static common.CommonUtils.isNullOrEmpty;
 
-/**
- * Created by Jay on 20.07.2016.
- */
+@Setter
 public class NewServerFileNameInputWindowController extends BaseWindowController<NewServerFileNameInputWindow> {
+
+    private static final String SERVER_FILE_NAME_PATTERN = ".+\\..+\\.xls";
+    public static final String INPUT_FILE_NAME_TEXT = "Введите название файла";
+    public static final String WRONG_FILE_NAME = "Неверное название файла";
 
     private MainWindowController mainWindowController;
 
-    NewServerFileNameInputWindowController(NewServerFileNameInputWindow window, final MainWindowController mainWindowController) {
-        this.mainWindowController = mainWindowController;
+    NewServerFileNameInputWindowController() {
         window.getStage().setOnCloseRequest(windowEvent -> mainWindowController.enableWindowElements());
-
     }
 
-    public EventHandler<MouseEvent> getCreateButtonClickHandler() {
-        return event -> {
-            TextField fileNameInputTextField = window.getFileNameInputTextField();
-            Label errorTextLabel = window.getErrorTextLabel();
-            String inputtedFileName = fileNameInputTextField.getText();
-            if (isNullOrEmpty(inputtedFileName)) {
-                errorTextLabel.setText("Введите название файла");
-            } else if (checkInputtedName(inputtedFileName)) {
-                errorTextLabel.setText("Неверное название файла");
-            } else {
-                mainWindowController.setSelectedServerFileName(inputtedFileName + ".xls");
-                Stage stage = window.getStage();
-                stage.close();
-                mainWindowController.afterFileCreation();
-            }
-        };
+    public void processCreateButtonClick(MouseEvent mouseEvent) {
+        val fileNameInputTextField = window.getFileNameInputTextField();
+        val inputtedFileName = fileNameInputTextField.getText();
+        if (isNullOrEmpty(inputtedFileName)) {
+            window.setErrorText(INPUT_FILE_NAME_TEXT);
+        } else if (inputtedFileName.matches(SERVER_FILE_NAME_PATTERN)) {
+            window.setErrorText(WRONG_FILE_NAME);
+        } else {
+            mainWindowController.setSelectedServerFileName(inputtedFileName + ".xls");
+            val stage = window.getStage();
+            stage.close();
+            mainWindowController.onNewServerFileNameInputted();
+        }
     }
-
-    private boolean checkInputtedName(String inputtedFileName) {
-        return inputtedFileName.matches(".+\\..+\\.xls");
-    }
-
 }

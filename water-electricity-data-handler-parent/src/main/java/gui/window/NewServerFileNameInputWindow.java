@@ -10,6 +10,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import lombok.Getter;
 import lombok.Setter;
 import lombok.val;
 
@@ -26,10 +27,18 @@ public class NewServerFileNameInputWindow extends BaseWindow<NewServerFileNameIn
 
     private VBox rootBox;
     private VBox mainBox;
-    private Label errorTextLabel;
+
     private Scene scene;
-    private TextField fileNameInputTextField;
+
     private Button createButton;
+
+    @Getter
+    private TextField fileNameInputTextField;
+
+    @Getter
+    private Label errorTextLabel;
+
+    @Getter
     private Stage stage;
 
     @Setter
@@ -89,11 +98,14 @@ public class NewServerFileNameInputWindow extends BaseWindow<NewServerFileNameIn
         createButton.setAlignment(Pos.CENTER);
     }
 
+    public void setErrorText(String text) {
+        errorTextLabel.setText(text);
+    }
 
     @Override
     public void bindController(NewServerFileNameInputWindowController controller) {
         super.bindController(controller);
-        createButton.setOnMouseClicked(controller.getCreateButtonClickHandler());
+        createButton.setOnMouseClicked(controller::processCreateButtonClick);
     }
 
     @Override
