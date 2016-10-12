@@ -1,7 +1,5 @@
 package gui.window.main;
 
-import common.config.ConfigProperties;
-import common.config.ConfigPropertiesSections;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -13,8 +11,8 @@ import lombok.val;
 import static gui.common.GuiCommonLib.createNewLineLabel;
 
 @Getter
-class LoadFileWidget extends VBox {
-    private static final String LOAD_FILE_BUTTON_TEXT_CONFIG_PROPERTY = "main.window.load.file.button.text";
+public class LoadFileWidget extends VBox {
+    private static final String LOAD_FILE_BUTTON_TEXT = "Загрузить файл с данными";
 
     private Label loadFileInfoTextLabel;
     private Button loadFileButton;
@@ -38,9 +36,7 @@ class LoadFileWidget extends VBox {
     }
 
     private void createLoadFileButton() {
-        val configProperties = ConfigProperties.getConfigProperties(ConfigPropertiesSections.GUI);
-        val propertyValue = configProperties.getPropertyValue(LOAD_FILE_BUTTON_TEXT_CONFIG_PROPERTY);
-        loadFileButton = new Button(propertyValue);
+        loadFileButton = new Button(LOAD_FILE_BUTTON_TEXT);
     }
 
 }

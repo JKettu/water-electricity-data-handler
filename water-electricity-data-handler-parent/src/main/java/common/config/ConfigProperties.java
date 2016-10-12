@@ -3,9 +3,7 @@ package common.config;
 import lombok.SneakyThrows;
 import lombok.val;
 
-import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.nio.charset.Charset;
 import java.util.Properties;
 
 public class ConfigProperties {
@@ -14,12 +12,7 @@ public class ConfigProperties {
     private InputStreamReader configFileReader;
 
     private ConfigProperties(ConfigPropertiesSections configPropertiesSections) {
-        switch (configPropertiesSections) {
-            case GUI:
-                InputStream configFileIs = ConfigProperties.class.getResourceAsStream(CONFIG_GUI_PROPERTY_FILE_NAME);
-                configFileReader = new InputStreamReader(configFileIs, Charset.forName("UTF-8"));
-                break;
-        }
+
     }
 
     public static ConfigProperties getConfigProperties(ConfigPropertiesSections configPropertiesSections) {

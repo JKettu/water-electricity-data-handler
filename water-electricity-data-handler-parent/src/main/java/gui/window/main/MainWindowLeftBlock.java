@@ -1,7 +1,5 @@
 package gui.window.main;
 
-import common.config.ConfigProperties;
-import common.config.ConfigPropertiesSections;
 import javafx.geometry.Pos;
 import javafx.scene.control.RadioButton;
 import javafx.scene.layout.VBox;
@@ -11,10 +9,11 @@ import lombok.val;
 import static gui.common.GuiCommonLib.createNewLineLabel;
 
 @Getter
-class MainWindowLeftBlock extends VBox {
-    private static final String WATER_BUTTON_TEXT_CONFIG_PROPERTY = "main.window.water.button.text";
-    private static final String ELECTRICITY_BUTTON_TEXT_CONFIG_PROPERTY = "main.window.electricity.button.text";
-    private static final String SELECT_RESOURCE_TEXT_LABEL_PROPERTY = "main.window.select.resource.label.text";
+public class MainWindowLeftBlock extends VBox {
+    private static final String RADIO_BUTTON_STYLE = ".radio";
+    private static final String WATER_BUTTON_TEXT = "Вода";
+    private static final String ELECTRICITY_BUTTON_TEXT = "Электричество";
+    private static final String SELECT_RESOURCE_TEXT_LABEL = "Выберите ресурс:";
 
     private RadioButton waterRadioButton;
     private RadioButton electricityRadioButton;
@@ -30,9 +29,7 @@ class MainWindowLeftBlock extends VBox {
         loadFileWidget = new LoadFileWidget();
         loadFileWidget.setAlignment(Pos.CENTER);
 
-        val configProperties = ConfigProperties.getConfigProperties(ConfigPropertiesSections.GUI);
-        val propertyValue = configProperties.getPropertyValue(SELECT_RESOURCE_TEXT_LABEL_PROPERTY);
-        val selectResourceTextLabel = new javafx.scene.control.Label(propertyValue + "\n");
+        val selectResourceTextLabel = new javafx.scene.control.Label(SELECT_RESOURCE_TEXT_LABEL + "\n");
         getChildren().addAll(selectResourceTextLabel,
                 waterRadioButton,
                 electricityRadioButton,
@@ -41,21 +38,17 @@ class MainWindowLeftBlock extends VBox {
     }
 
     private void createWaterRadioButton() {
-        val configProperties = ConfigProperties.getConfigProperties(ConfigPropertiesSections.GUI);
-        val propertyValue = configProperties.getPropertyValue(WATER_BUTTON_TEXT_CONFIG_PROPERTY);
-        waterRadioButton = new RadioButton(propertyValue);
+        waterRadioButton = new RadioButton(WATER_BUTTON_TEXT);
         waterRadioButton.setAlignment(Pos.BOTTOM_LEFT);
         waterRadioButton.setSelected(true);
-        waterRadioButton.setStyle(".radio");
+        waterRadioButton.setStyle(RADIO_BUTTON_STYLE);
     }
 
     private void createElectricityRadioButton() {
-        val configProperties = ConfigProperties.getConfigProperties(ConfigPropertiesSections.GUI);
-        val propertyValue = configProperties.getPropertyValue(ELECTRICITY_BUTTON_TEXT_CONFIG_PROPERTY);
-        electricityRadioButton = new RadioButton(propertyValue);
+        electricityRadioButton = new RadioButton(ELECTRICITY_BUTTON_TEXT);
         electricityRadioButton.setAlignment(Pos.BOTTOM_LEFT);
         electricityRadioButton.setSelected(false);
-        electricityRadioButton.setStyle(".radio");
+        electricityRadioButton.setStyle(RADIO_BUTTON_STYLE);
     }
 
 }

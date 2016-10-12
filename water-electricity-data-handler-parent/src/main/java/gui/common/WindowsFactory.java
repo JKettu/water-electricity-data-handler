@@ -1,4 +1,4 @@
-package gui;
+package gui.common;
 
 import controller.BaseWindowController;
 import gui.window.BaseWindow;
@@ -8,10 +8,10 @@ import lombok.val;
 public class WindowsFactory {
     @SneakyThrows
     public static <WindowClass extends BaseWindow<ControllerClass>, ControllerClass extends BaseWindowController<WindowClass>>
-    WindowClass CreateWindow(Class<WindowClass> windowClass, Class<ControllerClass> controllerClass) {
+    ControllerClass createWindow(Class<WindowClass> windowClass, Class<ControllerClass> controllerClass) {
         val window = windowClass.newInstance();
         val controller = controllerClass.newInstance();
         window.bindController(controller);
-        return window;
+        return controller;
     }
 }

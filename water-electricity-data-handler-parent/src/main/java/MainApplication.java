@@ -1,5 +1,5 @@
 import controller.MainWindowController;
-import gui.WindowsFactory;
+import gui.common.WindowsFactory;
 import gui.window.main.MainWindow;
 import javafx.application.Application;
 import javafx.stage.Stage;
@@ -9,9 +9,11 @@ import server.LockMonitor;
 
 public class MainApplication extends Application {
 
+    private static final String APPLICATION_TITLE = "Загрузка данных по воде и электроэнергии";
+
     @Override
     public void start(Stage primaryStage) throws Exception {
-        primaryStage.setTitle("Загрузка данных по воде и электроэнергии");
+        primaryStage.setTitle(APPLICATION_TITLE);
         primaryStage.setResizable(false);
         createMainWindow(primaryStage);
         addShutdownHook();
@@ -20,9 +22,10 @@ public class MainApplication extends Application {
     }
 
     private void createMainWindow(Stage primaryStage) {
-        val mainWindow = WindowsFactory.CreateWindow(MainWindow.class, MainWindowController.class);
-        val mainWindowScene = mainWindow.getScene();
-        primaryStage.setScene(mainWindowScene);
+        val mainWindowController = WindowsFactory.createWindow(MainWindow.class, MainWindowController.class);
+        mainWindowController.showWindow();
+        val mainWindow = mainWindowController.getWindow();
+        primaryStage.setScene(mainWindow.getScene());
     }
 
     private void processStartupActions() {

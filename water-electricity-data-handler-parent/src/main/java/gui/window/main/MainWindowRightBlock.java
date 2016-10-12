@@ -1,20 +1,18 @@
 package gui.window.main;
 
-import common.config.ConfigProperties;
-import common.config.ConfigPropertiesSections;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
 import lombok.Getter;
-import lombok.val;
 
 import static gui.common.GuiCommonLib.createNewLineLabel;
 
 @Getter
 public class MainWindowRightBlock extends VBox {
-    private static final String SELECT_SERVER_FILE_PROPERTY = "main.window.select.server.file.label.text";
+    private static final String SELECT_SERVER_FILE_TEXT_LABEL = "Выберите файл с сервера";
+    private static final int SERVER_FILES_BOX_MAX_WIDTH = 250;
 
-    private ComboBox serverFilesBox;
+    private ComboBox<String> serverFilesBox;
 
     MainWindowRightBlock() {
         create();
@@ -30,15 +28,14 @@ public class MainWindowRightBlock extends VBox {
     }
 
     private Label createSelectServerFileTextLabel() {
-        val configProperties = ConfigProperties.getConfigProperties(ConfigPropertiesSections.GUI);
-        val propertyValue = configProperties.getPropertyValue(SELECT_SERVER_FILE_PROPERTY);
-        return new Label(propertyValue);
+        return new Label(SELECT_SERVER_FILE_TEXT_LABEL);
     }
 
     private void createServerFilesBox() {
         serverFilesBox = new ComboBox<>();
+        serverFilesBox.valueProperty().addListener((observable, oldValue, newValue) -> {});
         serverFilesBox.setEditable(false);
-        serverFilesBox.setMaxWidth(250);
+        serverFilesBox.setMaxWidth(SERVER_FILES_BOX_MAX_WIDTH);
     }
 
 }

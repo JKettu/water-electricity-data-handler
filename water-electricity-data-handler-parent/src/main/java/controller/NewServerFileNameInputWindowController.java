@@ -18,7 +18,7 @@ public class NewServerFileNameInputWindowController extends BaseWindowController
 
     NewServerFileNameInputWindowController(NewServerFileNameInputWindow window, final MainWindowController mainWindowController) {
         this.mainWindowController = mainWindowController;
-        window.getStage().setOnCloseRequest(windowEvent -> mainWindowController.enableWindow());
+        window.getStage().setOnCloseRequest(windowEvent -> mainWindowController.enableWindowElements());
 
     }
 

@@ -1,8 +1,7 @@
 package gui.window.main;
 
-import common.config.ConfigProperties;
-import common.config.ConfigPropertiesSections;
 import controller.MainWindowController;
+import gui.common.GuiConstants;
 import gui.window.BaseWindow;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -11,25 +10,24 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import javafx.scene.paint.Paint;
 import lombok.Getter;
 import lombok.SneakyThrows;
 import lombok.val;
-
-import java.awt.*;
 
 import static gui.common.GuiCommonLib.*;
 
 @Getter
 public class MainWindow extends BaseWindow<MainWindowController> {
-    private static final String SEND_FILE_BUTTON_TEXT_CONFIG_PROPERTY = "main.window.load.file.button.text";
-    private static final String DELETE_REGION_BUTTON_TEXT_CONFIG_PROPERTY = "main.window.delete.region.button.text";
-    private static final String EXIT_BUTTON_TEXT_CONFIG_PROPERTY = "main.window.exit.button.text";
+    private static final String SEND_FILE_BUTTON_TEXT = "Отправить";
+    private static final String DELETE_REGION_BUTTON_TEXT = "Удалить регион из файла";
+    private static final String EXIT_BUTTON_TEXT = "Выход";
+    private static final int SEND_FILE_AND_DELETE_REGION_BUTTONS_BOX_SPACING = 50;
+    private static final int MAIN_BOX_SPACING = 50;
 
     private VBox rootBox;
     private Scene scene;
 
-    private Label longTaskInfoTextLabel;
+    private Label currentTaskInfoTextLabel;
 
     private Button sendFileButton;
     private Button exitButton;
@@ -40,8 +38,8 @@ public class MainWindow extends BaseWindow<MainWindowController> {
     private MainWindowLeftBlock leftBlock;
     private MainWindowRightBlock rightBlock;
 
-
-    public MainWindow() {
+    @Override
+    public void show() {
         createRootBox();
         buildScene();
         reloadWindowElements();
@@ -49,12 +47,11 @@ public class MainWindow extends BaseWindow<MainWindowController> {
 
     @SneakyThrows
     private void buildScene() {
-        Dimension screenSize = getScreenSize();
-        int screenWidth = (int) screenSize.getWidth();
-        int screenHeight = (int) screenSize.getHeight();
+        val screenSize = getScreenSize();
+        val screenWidth = screenSize.getWidth();
+        val screenHeight = screenSize.getHeight();
         scene = new Scene(rootBox, screenWidth / 2, screenHeight / 2);
-        scene.setFill(Paint.valueOf("gray"));
-        val styleResource = MainWindow.class.getResource("/WindowStyle.css");
+        val styleResource = MainWindow.class.getResource(GuiConstants.WINDOW_STYLE_CSS_RESOURCE_PATH);
         scene.setUserAgentStylesheet(styleResource.toExternalForm());
     }
 
@@ -69,15 +66,15 @@ public class MainWindow extends BaseWindow<MainWindowController> {
         val exitButtonBox = wrapNodeToCenteredHBox(exitButton);
         val sendFileButtonBox = wrapNodeToCenteredHBox(sendFileButton);
         val deleteRegionButtonBox = wrapNodeToCenteredHBox(deleteRegionButton);
-        val sendFileInfoTextBox = wrapNodeToCenteredVBox(longTaskInfoTextLabel);
+        val currentTaskInfoTextBox = wrapNodeToCenteredVBox(currentTaskInfoTextLabel);
 
         val sendFileAndDeleteRegionButtonsBox = new HBox();
         sendFileAndDeleteRegionButtonsBox.getChildren().addAll(sendFileButtonBox, deleteRegionButtonBox);
         sendFileAndDeleteRegionButtonsBox.setAlignment(Pos.CENTER);
-        sendFileAndDeleteRegionButtonsBox.setSpacing(50);
+        sendFileAndDeleteRegionButtonsBox.setSpacing(SEND_FILE_AND_DELETE_REGION_BUTTONS_BOX_SPACING);
 
         fillRootBox(mainBox,
-                sendFileInfoTextBox,
+                currentTaskInfoTextBox,
                 sendFileAndDeleteRegionButtonsBox,
                 exitButtonBox);
     }
@@ -96,7 +93,7 @@ public class MainWindow extends BaseWindow<MainWindowController> {
     }
 
     private void createLongTaskInfoTextLabel() {
-        longTaskInfoTextLabel = createNewLineLabel();
+        currentTaskInfoTextLabel = createNewLineLabel();
     }
 
     private void createProgressBarBox() {
@@ -110,7 +107,7 @@ public class MainWindow extends BaseWindow<MainWindowController> {
         leftBlock = new MainWindowLeftBlock();
         rightBlock = new MainWindowRightBlock();
         mainBox.getChildren().addAll(leftBlock, rightBlock);
-        mainBox.setSpacing(50);
+        mainBox.setSpacing(MAIN_BOX_SPACING);
         mainBox.setAlignment(Pos.CENTER);
         return mainBox;
     }
@@ -118,9 +115,9 @@ public class MainWindow extends BaseWindow<MainWindowController> {
 
     private void createRootBox() {
         rootBox = new VBox();
-        Dimension screenSize = getScreenSize();
-        int screenWidth = (int) screenSize.getWidth();
-        int screenHeight = (int) screenSize.getHeight();
+        val screenSize = getScreenSize();
+        val screenWidth = screenSize.getWidth();
+        val screenHeight = screenSize.getHeight();
         rootBox.setMinSize(screenHeight / 3, screenWidth / 3);
         rootBox.setAlignment(Pos.CENTER);
         rootBox.layout();
@@ -138,27 +135,21 @@ public class MainWindow extends BaseWindow<MainWindowController> {
 
 
     private void createExitButton() {
-        val configProperties = ConfigProperties.getConfigProperties(ConfigPropertiesSections.GUI);
-        val propertyValue = configProperties.getPropertyValue(EXIT_BUTTON_TEXT_CONFIG_PROPERTY);
-        exitButton = new Button(propertyValue);
+        exitButton = new Button(EXIT_BUTTON_TEXT);
     }
 
     private void createDeleteRegionButton() {
-        val configProperties = ConfigProperties.getConfigProperties(ConfigPropertiesSections.GUI);
-        val propertyValue = configProperties.getPropertyValue(DELETE_REGION_BUTTON_TEXT_CONFIG_PROPERTY);
-        deleteRegionButton = new Button(propertyValue);
+        deleteRegionButton = new Button(DELETE_REGION_BUTTON_TEXT);
         deleteRegionButton.setDisable(true);
     }
 
     private void createSendFileButton() {
-        val configProperties = ConfigProperties.getConfigProperties(ConfigPropertiesSections.GUI);
-        val propertyValue = configProperties.getPropertyValue(SEND_FILE_BUTTON_TEXT_CONFIG_PROPERTY);
-        sendFileButton = new Button(propertyValue);
+        sendFileButton = new Button(SEND_FILE_BUTTON_TEXT);
     }
 
 
-    public void setSendFileInfoText(String text) {
-        longTaskInfoTextLabel.setText(text);
+    public void setCurrentTaskInfoText(String text) {
+        currentTaskInfoTextLabel.setText(text);
     }
 
     public void setLoadFileInfoText(String text) {
@@ -182,5 +173,7 @@ public class MainWindow extends BaseWindow<MainWindowController> {
         val serverFilesBox = rightBlock.getServerFilesBox();
         serverFilesBox.setOnMouseClicked(controller::processServerFilesBoxClick);
         sendFileButton.setOnMouseClicked(controller::processSendFileButtonClick);
+        exitButton.setOnMouseClicked(controller::processExitButtonClick);
+        deleteRegionButton.setOnMouseClicked(controller::processDeleteRegionButtonClick);
     }
 }

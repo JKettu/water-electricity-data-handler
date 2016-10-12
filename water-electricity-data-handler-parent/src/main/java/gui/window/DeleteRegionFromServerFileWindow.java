@@ -1,107 +1,96 @@
 package gui.window;
 
-import controller.DeleteRegionFromServerFileController;
+import controller.DeleteRegionFromServerFileWindowController;
+import gui.common.GuiConstants;
+import gui.window.main.MainWindow;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.SceneBuilder;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.ProgressBar;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import javafx.scene.layout.VBoxBuilder;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import lombok.Getter;
+import lombok.val;
 
-import java.awt.*;
-
+import static gui.common.GuiCommonLib.createNewLineLabel;
 import static gui.common.GuiCommonLib.getScreenSize;
 
-/**
- * Created by Jay on 22.09.2016.
- */
-public class DeleteRegionFromServerFileWindow extends BaseWindow<DeleteRegionFromServerFileController> {
+@Getter
+public class DeleteRegionFromServerFileWindow extends BaseWindow<DeleteRegionFromServerFileWindowController> {
+
+    private static final String DELETE_REGION_BUTTON_TEXT = "Удалить регион";
+    private static final int REGIONS_COMBOBOX_MAX_WIDTH = 150;
+    private static final String DELETE_REGION_STAGE_TITLE = "Удаление региона из серверного файла";
+    private static final String SELECT_DELETING_REGION_TEXT_LABEL = "Выберите регион, который хотите удалить";
 
     private VBox rootField;
-    private Label errorTextLabel;
-    private Scene scene;
-    private Button deleteButton;
-    private ComboBox<Integer> regions;
-    private Stage stage;
+    private Label currentTaskInfoLabel;
+    private Button deleteRegionButton;
+    private ComboBox<Integer> regionsComboBox;
     private VBox progressBarBox;
+    private Scene scene;
+    private Stage stage;
 
-    public DeleteRegionFromServerFileWindow(Scene ownerScene) {
-        createRootField();
-        buildScene();
-        //элементы сцены
-        VBox main = createMainBox();
-        rootField.getChildren().add(main);
-        createStage(ownerScene);
+    public DeleteRegionFromServerFileWindow() {
+
     }
 
 
     @Override
-    public void bindController(DeleteRegionFromServerFileController controller) {
+    public void bindController(DeleteRegionFromServerFileWindowController controller) {
         super.bindController(controller);
-        deleteButton.setOnMouseClicked(controller.getDeleteButtonClickHandler());
-        regions.valueProperty().addListener(controller.getRegionsComboBoxChangeListener());
-        regions.setOnMouseClicked(controller.getRegionsComboBoxClickHandler());
+        deleteRegionButton.setOnMouseClicked(controller::processDeleteRegionButtonClick);
+        regionsComboBox.valueProperty().addListener(controller::processRegionsComboBoxValueChanging);
+        regionsComboBox.setOnMouseClicked(controller::processRegionsComboBoxClick);
     }
 
-    public Label getErrorTextLabel() {
-        return errorTextLabel;
+    @Override
+    public void show() {
+        createRootField();
+        buildScene();
+        val main = createMainBox();
+        rootField.getChildren().add(main);
     }
-
-    public Stage getStage() {
-        return stage;
-    }
-
-    public VBox getProgressBarBox() {
-        return progressBarBox;
-    }
-
-    public ComboBox<Integer> getRegions() {
-        return regions;
-    }
-
 
     private VBox createMainBox() {
-        VBox mainBox = new VBox();
+        val mainBox = new VBox();
 
         createErrorTextLabel();
-        createDeleteButton();
+        createRegionDeleteButton();
         createRegionsComboBox();
         createProgressBarBox();
-        HBox createDeleteButtonBox = new HBox();
-        createDeleteButtonBox.setAlignment(Pos.TOP_CENTER);
-        createDeleteButtonBox.getChildren().add(deleteButton);
-        HBox createRegionsBox = new HBox();
-        createRegionsBox.setAlignment(Pos.CENTER);
-        createRegionsBox.getChildren().addAll(regions);
 
-        VBox inputFileNameLabelBox = new VBox();
-        Label label = new Label("Выберите регион, который хотите удалить");
-        label.setAlignment(Pos.CENTER);
-        inputFileNameLabelBox.getChildren().add(label);
-        inputFileNameLabelBox.setAlignment(Pos.CENTER);
+        val deleteButtonBox = new HBox();
+        deleteButtonBox.setAlignment(Pos.TOP_CENTER);
+        deleteButtonBox.getChildren().add(deleteRegionButton);
 
+        val regionsBox = new HBox();
+        regionsBox.setAlignment(Pos.CENTER);
+        regionsBox.getChildren().addAll(regionsComboBox);
 
+        val selectDeletingRegionLabel = new Label(SELECT_DELETING_REGION_TEXT_LABEL);
+        selectDeletingRegionLabel.setAlignment(Pos.CENTER);
+
+        val selectDeletingRegionLabelBox = new VBox();
+        selectDeletingRegionLabelBox.setAlignment(Pos.CENTER);
+        selectDeletingRegionLabelBox.getChildren().add(selectDeletingRegionLabel);
+
+        mainBox.setAlignment(Pos.CENTER);
         mainBox.getChildren()
                 .addAll(createNewLineLabel(),
-                        inputFileNameLabelBox,
+                        selectDeletingRegionLabelBox,
                         createNewLineLabel(),
-                        createRegionsBox,
+                        regionsBox,
                         createNewLineLabel(),
-                        errorTextLabel,
+                        currentTaskInfoLabel,
                         createNewLineLabel(),
                         progressBarBox,
-                        createDeleteButtonBox);
-        mainBox.setAlignment(Pos.CENTER);
+                        deleteButtonBox);
         return mainBox;
-    }
-
-    private Label createNewLineLabel() {
-        return new Label("\n");
     }
 
     private void createProgressBarBox() {
@@ -110,50 +99,56 @@ public class DeleteRegionFromServerFileWindow extends BaseWindow<DeleteRegionFro
     }
 
     private void createErrorTextLabel() {
-        errorTextLabel = new Label();
-        errorTextLabel.setAlignment(Pos.CENTER);
+        currentTaskInfoLabel = new Label();
+        currentTaskInfoLabel.setAlignment(Pos.CENTER);
     }
 
     private void createRegionsComboBox() {
-        regions = new ComboBox<>(); //в списке должны быть файлы с сервера
-        regions.setEditable(false);
-        regions.setMaxWidth(150);
+        regionsComboBox = new ComboBox<>(); //в списке должны быть файлы с сервера
+        regionsComboBox.setEditable(false);
+        regionsComboBox.setMaxWidth(REGIONS_COMBOBOX_MAX_WIDTH);
     }
 
     private void createRootField() {
-        VBoxBuilder vBoxBuilder = VBoxBuilder.create();
-        rootField = vBoxBuilder.build();
+        rootField = new VBox();
         rootField.layout();
     }
 
-    private void createStage(Scene ownerScene) {
+    private void buildScene() {
+        val screenSize = getScreenSize();
+        val screenWidth = screenSize.width;
+        val screenHeight = screenSize.height;
+
+        scene = new Scene(rootField, screenWidth / 3, screenHeight / 3);
+        val styleResource = MainWindow.class.getResource(GuiConstants.WINDOW_STYLE_CSS_RESOURCE_PATH);
+        scene.setUserAgentStylesheet(styleResource.toExternalForm());
+    }
+
+    private void createRegionDeleteButton() {
+        deleteRegionButton = new Button(DELETE_REGION_BUTTON_TEXT);
+        deleteRegionButton.setAlignment(Pos.CENTER);
+    }
+
+
+    public void setCurrentTaskInfo(String text){
+        currentTaskInfoLabel.setText(text);
+    }
+
+    public void showProgressBar(){
+        val progressBar = new ProgressBar();
+        progressBarBox.getChildren().addAll(progressBar);
+    }
+
+    public void hideProgressBar(){
+        progressBarBox.getChildren().clear();
+    }
+
+    public void createStage(Scene ownerScene) {
         stage = new Stage();
-        stage.setTitle("Удаление региона из серверного файла");
+        stage.setTitle(DELETE_REGION_STAGE_TITLE);
         stage.setScene(scene);
         stage.initModality(Modality.WINDOW_MODAL);
         stage.initOwner(ownerScene.getWindow());
         stage.show();
-    }
-
-    private void buildScene() {
-        SceneBuilder sceneBuilder = SceneBuilder.create();
-        sceneBuilder.fill(javafx.scene.paint.Paint.valueOf("gray"));
-        sceneBuilder.stylesheets(this.getClass().getResource("WindowStyle.css").toExternalForm());
-        Dimension screenSize = getScreenSize();
-        int screenWidth = screenSize.width;
-        int screenHeight = screenSize.height;
-        sceneBuilder.height(screenHeight / 3);
-        sceneBuilder.width(screenWidth / 3);
-        sceneBuilder.root(rootField);
-        scene = sceneBuilder.build();
-    }
-
-    private void createDeleteButton() {
-        deleteButton = new Button("Удалить регион");
-        deleteButton.setAlignment(Pos.CENTER);
-    }
-
-    public Button getDeleteButton() {
-        return deleteButton;
     }
 }

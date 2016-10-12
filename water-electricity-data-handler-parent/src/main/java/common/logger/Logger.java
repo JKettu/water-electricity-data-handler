@@ -1,5 +1,7 @@
 package common.logger;
 
+import lombok.val;
+
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -15,11 +17,11 @@ public class Logger {
         this.className = className;
         this.methodName = methodName;
         try {
-            Calendar calendar = Calendar.getInstance();
-            String year = String.valueOf(calendar.get(Calendar.YEAR));
-            String month = String.valueOf(calendar.get(Calendar.MONTH));
-            String day = String.valueOf(calendar.get(Calendar.DAY_OF_MONTH));
-            String logFilePath = "logs/log_" + year + "." + month + "." + day + ".txt";
+            val calendar = Calendar.getInstance();
+            val year = String.valueOf(calendar.get(Calendar.YEAR));
+            val month = String.valueOf(calendar.get(Calendar.MONTH));
+            val day = String.valueOf(calendar.get(Calendar.DAY_OF_MONTH));
+            val logFilePath = "logs/log_" + year + "." + month + "." + day + ".txt";
             File logFile = new File(logFilePath);
             if (!logFile.exists()) {
                 logFile = new File("logs");
@@ -40,7 +42,7 @@ public class Logger {
 
     synchronized public void log(LogCategory category, String message) {
         try {
-            String logLine = formatLogLine(category, message);
+            val logLine = formatLogLine(category, message);
             fileWriter.write(logLine);
             fileWriter.flush();
         } catch (IOException e) {
@@ -50,7 +52,7 @@ public class Logger {
     }
 
     private String formatLogLine(LogCategory category, String message) {
-        Date date = new Date();
+        val date = new Date();
         return "[" + date + "]" +
                 "[" + className + "]" +
                 "[" + methodName + "]" +

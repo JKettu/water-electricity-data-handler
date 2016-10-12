@@ -1,13 +1,16 @@
 package controller;
 
 import com.sun.javafx.collections.ObservableListWrapper;
+import common.CommonUtils;
 import common.ConnectionFailedException;
 import common.DataType;
+import controller.common.CommonControllerMethods;
 import gui.common.GuiConstants;
+import gui.common.WindowsFactory;
 import gui.window.DeleteRegionFromServerFileWindow;
+import gui.window.ErrorWindow;
 import gui.window.NewServerFileNameInputWindow;
 import gui.window.SuccessLoadWindow;
-import gui.window.UnsuccessStartWindow;
 import gui.window.main.MainWindow;
 import handling.XlsFileHandler;
 import handling.XlsxFileHandler;
@@ -16,6 +19,7 @@ import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.concurrent.WorkerStateEvent;
 import javafx.event.EventHandler;
+import javafx.scene.control.ComboBox;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.VBox;
 import lombok.NoArgsConstructor;
@@ -31,6 +35,11 @@ import static common.CommonUtils.isNullOrEmpty;
 @NoArgsConstructor
 public class MainWindowController extends BaseWindowController<MainWindow> {
 
+    private static final String LOADING_SERVER_FILES_TEXT_LABEL = "Загружаем список серверных файлов...";
+    public static final String NETWORK_CONNECTION_ERROR_TEXT_LABEL =
+            "Нет подключения к Интернету. Выполните подключение и перезапустите программу";
+    public static final String SELECT_SERVER_FILE_TEXT_LABEL = "Выберите серверный файл";
+
     private XlsxFileHandler xlsxFileHandler;
     private File loadedFile;
     private boolean loadedFileReadyForSend;
@@ -43,17 +52,49 @@ public class MainWindowController extends BaseWindowController<MainWindow> {
     public MainWindowController(MainWindow window) {
         xlsxFileHandler = new XlsxFileHandler();
         serverFileNames = new ArrayList<>();
-        val serverFileNamesObservableList = new ObservableListWrapper<>(serverFileNames);
+        ObservableListWrapper<String> serverFileNamesObservableList = new ObservableListWrapper<>(serverFileNames);
         serverFileNamesObservableList.add(GuiConstants.NEW_SERVER_FILE_GUI_TEXT);
-        window.getRightBlock().getServerFilesBox().setItems(serverFileNamesObservableList);
+        val mainWindowRightBlock = window.getRightBlock();
+        ComboBox<String> mainWindowServerFilesBox = mainWindowRightBlock.getServerFilesBox();
+        mainWindowServerFilesBox.setItems(serverFileNamesObservableList);
     }
 
-    public void processSendFileButtonClick(MouseEvent clickEvent){
+    private void showLongTaskProcessingInfo(String info) {
+        window.setCurrentTaskInfoText(info);
+        window.showProgressBar();
+    }
+
+    private void disableWindowElements() {
+        window.getSendFileButton().setDisable(true);
 
     }
 
-    void setSelectedDataType(DataType dataType) {
-        selectedDataType = dataType;
+    void enableWindowElements() {
+        window.getSendFileButton().setDisable(false);
+        //        window.getWaterRadioButton().setDisable(false);
+        //        window.getElectricityRadioButton().setDisable(false);
+        //        window.getLoadFileButton().setDisable(false);
+        //        window.getProgressBarBox().getChildren().clear();
+        //        window.getCurrentTaskInfoTextLabel().setText("");
+        //        window.getServerFilesBox().setDisable(false);
+        //        if (selectedServerFileName != null && !selectedServerFileName.isEmpty() &&
+        //                !selectedServerFileName.equals("Новый файл")) {
+        //            window.getDeleteButton().setDisable(false);
+        //        }
+
+    }
+
+
+    //Получить список файлов с сервера
+    private List<String> getServerFileNames() {
+        List<String> serverFileNames = new ArrayList<>();
+        val ftpController = new FTPController();
+        try {
+            serverFileNames = ftpController.getServerFileNames();
+        } catch (ConnectionFailedException e) {
+            showErrorWindow(NETWORK_CONNECTION_ERROR_TEXT_LABEL);
+        }
+        return serverFileNames;
     }
 
 
@@ -92,7 +133,7 @@ public class MainWindowController extends BaseWindowController<MainWindow> {
         task.setOnSucceeded(new EventHandler<WorkerStateEvent>() {
             @Override
             public void handle(WorkerStateEvent event) {
-                enableWindow();
+                enableWindowElements();
                 setSuccessLoadWindow();
             }
         });
@@ -123,30 +164,13 @@ public class MainWindowController extends BaseWindowController<MainWindow> {
         return selectedServerFileName.equals(GuiConstants.NEW_SERVER_FILE_GUI_TEXT);
     }
 
-    //Получить список файлов с сервера
-    private List<String> getServerFileNames() {
-        List<String> serverFileNames = new ArrayList<>();
-        FTPController ftpController = new FTPController();
-        try {
-            serverFileNames = ftpController.getServerFileNames();
-        } catch (ConnectionFailedException e) {
-            showUnsuccessfulStartWindow("Нет подключения к Интернету. Выполните подключение и перезапустите программу");
-        }
-        return serverFileNames;
-    }
 
-
-    private void showUnsuccessfulStartWindow(String errorText) {
+    private void showErrorWindow(String errorText) {
         window.clearWindow();
         selectedServerFileName = "";
         setLoadedFileEqualsNull();
-        UnsuccessStartWindow unsuccessStartWindow = new UnsuccessStartWindow();
-        UnsuccessStartWindowController unsuccessStartWindowController =
-                new UnsuccessStartWindowController(unsuccessStartWindow, errorText);
-        unsuccessStartWindow.bindController(unsuccessStartWindowController);
-        VBox unsuccessfulStartWindowRoot = unsuccessStartWindow.getRootField();//место размещения
-        //VBox mainWindowRoot = window.getRootField();
-        //mainWindowRoot.getChildren().add(unsuccessfulStartWindowRoot);
+        val errorWindowController = WindowsFactory.createWindow(ErrorWindow.class, ErrorWindowController.class);
+        errorWindowController.setErrorText(errorText);
     }
 
     private void createStageForNewFileName() {
@@ -331,46 +355,21 @@ public class MainWindowController extends BaseWindowController<MainWindow> {
         }
     }
 
-    private void createStageForRegions() {
-        DeleteRegionFromServerFileWindow deleteRegionFromServerFileWindow =
-                new DeleteRegionFromServerFileWindow(window.getScene());
-        DeleteRegionFromServerFileController controller =
-                new DeleteRegionFromServerFileController(deleteRegionFromServerFileWindow, this);
-        deleteRegionFromServerFileWindow.bindController(controller);
+    private void createDeleteRegionStage() {
+        val deleteRegionWindowController = WindowsFactory
+                .createWindow(DeleteRegionFromServerFileWindow.class, DeleteRegionFromServerFileWindowController.class);
+        deleteRegionWindowController.setMainWindowController(this);
+        deleteRegionWindowController.showWindow();
     }
 
-    private void showLongTaskProcessingInfo(String info) {
-        window.setSendFileInfoText(info);
-        window.showProgressBar();
-    }
-
-    private void disableWindow() {
-        window.getSendFileButton().setDisable(true);
-
-    }
-
-    void enableWindow() {
-        window.getSendFileButton().setDisable(false);
-//        window.getWaterRadioButton().setDisable(false);
-//        window.getElectricityRadioButton().setDisable(false);
-//        window.getLoadFileButton().setDisable(false);
-//        window.getProgressBarBox().getChildren().clear();
-//        window.getLongTaskInfoTextLabel().setText("");
-//        window.getServerFilesBox().setDisable(false);
-//        if (selectedServerFileName != null && !selectedServerFileName.isEmpty() &&
-//                !selectedServerFileName.equals("Новый файл")) {
-//            window.getDeleteButton().setDisable(false);
-//        }
-
-    }
 
     public void processServerFilesBoxClick(MouseEvent mouseEvent) {
-        showLongTaskProcessingInfo("Загружаем список серверных файлов...");
+        showLongTaskProcessingInfo(LOADING_SERVER_FILES_TEXT_LABEL);
         val mainWindowRightBlock = window.getRightBlock();
         val serverFilesBox = mainWindowRightBlock.getServerFilesBox();
         serverFilesBox.hide();
-        disableWindow();
-        Task<Void> task = new Task<Void>() {
+        disableWindowElements();
+        val task = new Task<Void>() {
             @Override
             protected Void call() throws Exception {
                 serverFileNames = getServerFileNames();
@@ -386,11 +385,32 @@ public class MainWindowController extends BaseWindowController<MainWindow> {
                 items.clear();
             }
             items.add(GuiConstants.NEW_SERVER_FILE_GUI_TEXT);
-            enableWindow();
+            enableWindowElements();
             serverFilesBox.show();
         });
-        task.setOnFailed(workerStateEvent -> showUnsuccessfulStartWindow(
-                "Нет подключения к Интернету. Выполните подключение и перезапустите программу"));
+        task.setOnFailed(workerStateEvent -> showErrorWindow(NETWORK_CONNECTION_ERROR_TEXT_LABEL));
+    }
+
+    public void processExitButtonClick(MouseEvent mouseEvent) {
+        CommonControllerMethods.exit();
+    }
+
+    public void processDeleteRegionButtonClick(MouseEvent mouseEvent) {
+        if (CommonUtils.isNullOrEmpty(selectedServerFileName) ||
+                selectedServerFileName.equals(GuiConstants.NEW_SERVER_FILE_GUI_TEXT)) {
+            window.setCurrentTaskInfoText(SELECT_SERVER_FILE_TEXT_LABEL);
+            return;
+        }
+        createDeleteRegionStage();
+    }
+
+    public void processSendFileButtonClick(MouseEvent clickEvent) {
+
+    }
+
+    @Override
+    public void showWindow() {
+        window.show();
     }
 
 /*
@@ -433,7 +453,7 @@ public class MainWindowController extends BaseWindowController<MainWindow> {
                         String loadedFilePath = loadedFile.getAbsolutePath();
                         String loadedFileName = loadedFile.getName();
                         Label loadFileErrorTextLabel = window.getLoadFileErrorTextLabel();
-                        Label sendFileInfoTextLabel = window.getLongTaskInfoTextLabel();
+                        Label sendFileInfoTextLabel = window.getCurrentTaskInfoTextLabel();
 
                         if (clientFileWasLoadedCorrectly(loadedFilePath, loadedFileName)) {
                             loadFileErrorTextLabel.setText("Файл загружен");
@@ -456,7 +476,7 @@ public class MainWindowController extends BaseWindowController<MainWindow> {
 
                 @Override
                 public void handle(MouseEvent event) {
-                    Label sendFileInfoTextLabel = window.getLongTaskInfoTextLabel();
+                    Label sendFileInfoTextLabel = window.getCurrentTaskInfoTextLabel();
                     //Отправка загруженного файла в БД
 
                     //если не выбрали файл, в который будет идти запись
@@ -537,7 +557,7 @@ public class MainWindowController extends BaseWindowController<MainWindow> {
                 public void handle(MouseEvent mouseEvent) {
                     if (selectedServerFileName == null || selectedServerFileName.isEmpty() ||
                             selectedServerFileName.equals(GuiConstants.NEW_SERVER_FILE_GUI_TEXT)) {
-                        window.getLongTaskInfoTextLabel().setText("Выберите серверный файл");
+                        window.getCurrentTaskInfoTextLabel().setText("Выберите серверный файл");
                         return;
                     }
                     createStageForRegions();
