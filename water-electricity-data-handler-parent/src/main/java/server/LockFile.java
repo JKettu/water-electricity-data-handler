@@ -1,25 +1,22 @@
 package server;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 @Getter
+@AllArgsConstructor
 public class LockFile implements Comparable<LockFile> {
+    public static final String LOCK_FILE_TYPE = ".lock";
     private String serverFileName;
     private int lockClientIndex;
 
-    public LockFile(String serverFileName, int lockClientIndex) {
-        this.serverFileName = serverFileName;
-        this.lockClientIndex = lockClientIndex;
-    }
-
-    LockFile(String lockFileName) {
+    public LockFile(String lockFileName) {
         this.serverFileName = lockFileName.substring(0, lockFileName.indexOf('_'));
         this.lockClientIndex = Integer.parseInt(lockFileName.split("_")[1]);
     }
 
-
-    String getLockFileName() {
-        return serverFileName + "_" + lockClientIndex + "_" + ".lock";
+    public String getLockFileName() {
+        return serverFileName + "_" + lockClientIndex + "_" + LOCK_FILE_TYPE;
     }
 
     @Override
@@ -45,11 +42,11 @@ public class LockFile implements Comparable<LockFile> {
         return getLockFileName();
     }
 
-    static boolean isLockFile(String fileName) {
-        return fileName.endsWith(".lock");
+    public static boolean isLockFile(String fileName) {
+        return fileName.endsWith(LOCK_FILE_TYPE);
     }
 
-    void decrementClientLockIndex() {
+    public void decrementClientLockIndex() {
         lockClientIndex--;
     }
 }

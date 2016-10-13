@@ -33,10 +33,10 @@ import static common.CommonUtils.isNullOrEmpty;
 public class MainWindowController extends BaseWindowController<MainWindow> {
 
     private static final String SELECT_FILE_FOR_UPLOADING_TEXT = "Выберите файл для выгрузки данных";
-    private static final String LOADING_SERVER_FILES_TEXT_LABEL = "Загружаем список серверных файлов...";
+    private static final String LOADING_SERVER_FILES_TEXT = "Загружаем список серверных файлов...";
     private static final String NETWORK_CONNECTION_ERROR_TEXT_LABEL =
             "Нет подключения к Интернету. Выполните подключение и перезапустите программу";
-    private static final String SELECT_SERVER_FILE_TEXT_LABEL = "Выберите серверный файл";
+    private static final String SELECT_SERVER_FILE_TEXT = "Выберите серверный файл";
     private static final String SELECT_FILE_FOR_DOWNLOADING_TEXT = "Выберите файл для загрузки данных";
     private static final String WATER_XLS_FILE_PATTERN = "В.+-\\d+\\.xls";
     private static final String WATER_XLSX_FILE_PATTERN = "В.+-\\d+\\.xlsx";
@@ -51,7 +51,6 @@ public class MainWindowController extends BaseWindowController<MainWindow> {
     private XlsxFileHandler xlsxFileHandler;
     private File loadedFile;
     private boolean loadedFileReadyForSend;
-    private DataType selectedDataType = DataType.WATER;
     private FTPController ftpController;
     private List<String> serverFileNames;
     private XlsFileHandler xlsFileHandler;
@@ -59,6 +58,8 @@ public class MainWindowController extends BaseWindowController<MainWindow> {
     @Setter
     private String selectedServerFileName;
 
+    @Setter
+    private DataType selectedDataType = DataType.WATER;
 
     public MainWindowController() {
         xlsxFileHandler = new XlsxFileHandler();
@@ -332,7 +333,7 @@ public class MainWindowController extends BaseWindowController<MainWindow> {
 
 
     public void processServerFilesBoxClick(MouseEvent mouseEvent) {
-        showLongTaskProcessingInfo(LOADING_SERVER_FILES_TEXT_LABEL);
+        showLongTaskProcessingInfo(LOADING_SERVER_FILES_TEXT);
         val mainWindowRightBlock = window.getRightBlock();
         val serverFilesBox = mainWindowRightBlock.getServerFilesBox();
         serverFilesBox.hide();
@@ -367,7 +368,7 @@ public class MainWindowController extends BaseWindowController<MainWindow> {
     public void processDeleteRegionButtonClick(MouseEvent mouseEvent) {
         if (CommonUtils.isNullOrEmpty(selectedServerFileName) ||
                 selectedServerFileName.equals(GuiConstants.NEW_SERVER_FILE_GUI_TEXT)) {
-            window.setCurrentTaskInfoText(SELECT_SERVER_FILE_TEXT_LABEL);
+            window.setCurrentTaskInfoText(SELECT_SERVER_FILE_TEXT);
             return;
         }
         val deleteRegionWindowController = WindowsFactory
@@ -401,7 +402,7 @@ public class MainWindowController extends BaseWindowController<MainWindow> {
             return;
         }
 
-        val task = new Task<Void>() {
+        val sendFileTask = new Task<Void>() {
             @Override
             public Void call() {
                 Logger logger =
@@ -420,11 +421,12 @@ public class MainWindowController extends BaseWindowController<MainWindow> {
                 showErrorWindow(FILE_HANDLING_ERROR);
             }
         };
-        task.setOnSucceeded(event -> {
+        sendFileTask.setOnSucceeded(event -> {
             enableWindowElements();
+            hideLongTaskProcessingInfo();
             setSuccessLoadWindow();
         });
-        new Thread(task).start();
+        new Thread(sendFileTask).start();
         showLongTaskProcessingInfo(FILE_IS_SENDING);
         disableWindowElements();
     }

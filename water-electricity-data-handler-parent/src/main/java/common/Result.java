@@ -1,14 +1,7 @@
 package common;
 
 public enum Result {
-    //Соединение разорвно
-    DISCONNECTED,
-    //Соединение прошло успешно
-    CONNECTED,
-    //Вход успешен
-    LOGIN,
-    //Войти не удалось
-    LOGOUT,
+
     //Файл уже был загружен ранее
     EXISTED_FILE,
     //Не удалось получить файл с сервера

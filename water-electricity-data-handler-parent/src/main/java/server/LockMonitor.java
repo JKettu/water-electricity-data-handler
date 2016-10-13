@@ -1,19 +1,26 @@
 package server;
 
-import common.ConnectionFailedException;
 import common.lock.TemporaryDeleteOnExitFiles;
 import common.logger.LogCategory;
 import common.logger.Logger;
+import lombok.Getter;
+import lombok.val;
 
 import java.io.File;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class LockMonitor {
-    private static LockMonitor instance;
-    private List<LockFile> locks;
-    private Map<String, LockFile> lastClientLocks;
     public static final int LAST_LOG_CHECK_DELAY_MULTIPLIER = 5000;
     public static final Object lock = new Object();
+
+    @Getter
+    private List<LockFile> locks;
+
+    private static LockMonitor instance;
+
+    private Map<String, LockFile> lastClientLocks;
+
 
     private LockMonitor() {
         locks = new ArrayList<>();
@@ -27,63 +34,57 @@ public class LockMonitor {
         return instance;
     }
 
-    public void startMonitoring() {
-        Thread t = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                while (true) {
-                    Logger logger = Logger.getLogger(getClass().toString(), "startMonitoring");
-                    FTPController ftpController = new FTPController();
-                    locks = ftpController.getLockFiles();
-                    List<String> serverFileNames;
-                    try {
-                        serverFileNames = ftpController.getServerFileNames();
-                    } catch (ConnectionFailedException e) {
-                        logger.log(LogCategory.ERROR, "Error during getting server file names: " + e);
-                        return;
-                    }
-                    for (String serverFileName : serverFileNames) {
-                        List<LockFile> serverFileNameLocks = new ArrayList<>();
-                        for (LockFile lock : locks) {
-                            if (lock.getServerFileName().equals(serverFileName)) {
-                                serverFileNameLocks.add(lock);
-                            }
-                        }
-                        if (serverFileNameLocks.isEmpty()) {
-                            lastClientLocks.remove(serverFileName);
-                            continue;
-                        }
-                        Collections.sort(serverFileNameLocks);
-                        LockFile lastClientLock = serverFileNameLocks.get(serverFileNameLocks.size() - 1);
-                        lastClientLocks.put(serverFileName, lastClientLock);
-                    }
-                    synchronized (lock) {
-                            lock.notifyAll();
-                    }
-                }
-            }
-        });
-        t.setDaemon(true);
-        t.start();
-    }
 
-    List<LockFile> getLocks() {
-        return locks;
+    public void startMonitoring() {
+        val thread = new Thread(this::monitor);
+        thread.setDaemon(true);
+        thread.start();
     }
 
     public LockFile getLastClientLock(String serverFileName) {
         return lastClientLocks.get(serverFileName);
     }
 
-    public void forceDeleteLocks(){
-        FTPController ftpController = new FTPController();
-        for (String lockFile : TemporaryDeleteOnExitFiles.currentFiles) {
-            File file = new File(lockFile);
+    public void forceDeleteLocks() {
+        val ftpController = new FTPController();
+        for (val lockFile : TemporaryDeleteOnExitFiles.currentFiles) {
+            val file = new File(lockFile);
             if (file.exists() && file.isFile()) {
                 file.delete();
             }
             ftpController.deleteFile(lockFile);
             TemporaryDeleteOnExitFiles.removeFile(lockFile);
+        }
+    }
+
+
+    private void monitor() {
+        while (true) {
+            val logger = Logger.getLogger(getClass().toString(), "startMonitoring");
+            val ftpController = new FTPController();
+            locks = ftpController.getLockFiles();
+            List<String> serverFileNames;
+            try {
+                serverFileNames = ftpController.getServerFileNames();
+            } catch (Exception e) {
+                logger.log(LogCategory.ERROR, "Error during getting server file names: " + e);
+                return;
+            }
+            for (val serverFileName : serverFileNames) {
+                val serverFileNameLocks = locks.stream()
+                        .filter(lock -> lock.getServerFileName().equals(serverFileName))
+                        .collect(Collectors.toList());
+                if (serverFileNameLocks.isEmpty()) {
+                    lastClientLocks.remove(serverFileName);
+                    continue;
+                }
+                Collections.sort(serverFileNameLocks);
+                val lastClientLock = serverFileNameLocks.get(serverFileNameLocks.size() - 1);
+                lastClientLocks.put(serverFileName, lastClientLock);
+            }
+            synchronized (lock) {
+                lock.notifyAll();
+            }
         }
     }
 }

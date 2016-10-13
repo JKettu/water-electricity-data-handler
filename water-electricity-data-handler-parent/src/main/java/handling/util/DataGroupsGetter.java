@@ -2,9 +2,6 @@ package handling.util;
 
 import common.DataType;
 
-/**
- * Created by Anton on 20.07.2016.
- */
 public class DataGroupsGetter {
 
     public static String getGroup(int groupNumber, DataType dataType) {

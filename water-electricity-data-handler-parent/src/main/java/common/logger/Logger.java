@@ -56,6 +56,7 @@ public class Logger {
         return "[" + date + "]" +
                 "[" + className + "]" +
                 "[" + methodName + "]" +
+                "[" + Thread.currentThread().getStackTrace()[2].getLineNumber() + "]" +
                 "[" + category.name() + "]" +
                 ": " + message + System.lineSeparator();
     }

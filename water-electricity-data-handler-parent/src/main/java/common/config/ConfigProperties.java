@@ -7,12 +7,19 @@ import java.io.InputStreamReader;
 import java.util.Properties;
 
 public class ConfigProperties {
-    private static final String CONFIG_GUI_PROPERTY_FILE_NAME = "/gui.properties";
+    private static final String CONFIG_FTP_PROPERTY_FILE_NAME = "/ftp.properties";
     private static ConfigProperties instance;
     private InputStreamReader configFileReader;
 
-    private ConfigProperties(ConfigPropertiesSections configPropertiesSections) {
 
+    private ConfigProperties(ConfigPropertiesSections configPropertiesSections) {
+        switch (configPropertiesSections) {
+            case FTP:
+                configFileReader =
+                        new InputStreamReader(
+                                ConfigProperties.class.getResourceAsStream(CONFIG_FTP_PROPERTY_FILE_NAME));
+                break;
+        }
     }
 
     public static ConfigProperties getConfigProperties(ConfigPropertiesSections configPropertiesSections) {
@@ -23,10 +30,10 @@ public class ConfigProperties {
     }
 
     @SneakyThrows
-    public String getPropertyValue(String propertyName) {
+    public  <T> T getPropertyValue(String propertyName) {
         val properties = new Properties();
         properties.load(configFileReader);
-        return properties.getProperty(propertyName);
+        return (T) properties.getProperty(propertyName);
     }
 
 }

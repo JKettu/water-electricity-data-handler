@@ -2,6 +2,7 @@ package server;
 
 import common.logger.LogCategory;
 import common.logger.Logger;
+import lombok.val;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -10,27 +11,27 @@ import java.util.List;
 public class ClientService {
 
     private static final String CLIENT_ID_FILE_NAME = "id.txt";
-    public static Integer CLIENT_ID = 1;
+    public static int CLIENT_ID = 1;
 
     public static void registerClient() {
-        FTPController ftpController = new FTPController();
-        Logger logger = Logger.getLogger(ClientService.class.toString(),"registerClient");
+        val ftpController = new FTPController();
+        val logger = Logger.getLogger(ClientService.class.toString(), "registerClient");
         try {
-            InputStream inputStream = ftpController.getInputFileStream(CLIENT_ID_FILE_NAME);
-            if(inputStream == null){
+            val inputStream = ftpController.getInputFileStream(CLIENT_ID_FILE_NAME);
+            if (inputStream == null) {
                 return;
             }
-            List<Integer> clientIds = readClientIds(inputStream);
+            val clientIds = readClientIds(inputStream);
             if (clientIds.isEmpty()) {
                 clientIds.add(1);
             } else {
-                int lastClientId = clientIds.get(clientIds.size() - 1);
+                val lastClientId = clientIds.get(clientIds.size() - 1);
                 clientIds.add(lastClientId + 1);
                 CLIENT_ID = lastClientId + 1;
             }
-            OutputStream clientIdsOs = new ByteArrayOutputStream();
+            val clientIdsOs = new ByteArrayOutputStream();
             writeClientIds(clientIds, clientIdsOs);
-            InputStream clientIdsIs = new ByteArrayInputStream(((ByteArrayOutputStream) clientIdsOs).toByteArray());
+            val clientIdsIs = new ByteArrayInputStream(clientIdsOs.toByteArray());
             ftpController.sendFile(clientIdsIs, CLIENT_ID_FILE_NAME);
             logger.log(LogCategory.INFO, "Register client with id = '" + CLIENT_ID + "'");
         } catch (IOException e) {
@@ -39,22 +40,22 @@ public class ClientService {
     }
 
     public static void unregisterClient() {
-        Logger logger = Logger.getLogger(ClientService.class.toString(),"unregisterClient");
-        FTPController ftpController = new FTPController();
+        val logger = Logger.getLogger(ClientService.class.toString(), "unregisterClient");
+        val ftpController = new FTPController();
         try {
-            InputStream inputStream = ftpController.getInputFileStream(CLIENT_ID_FILE_NAME);
-            if(inputStream == null){
+            val inputStream = ftpController.getInputFileStream(CLIENT_ID_FILE_NAME);
+            if (inputStream == null) {
                 return;
             }
-            List<Integer> clientIds = readClientIds(inputStream);
+            val clientIds = readClientIds(inputStream);
             if (clientIds.isEmpty()) {
                 return;
             } else {
                 clientIds.remove(CLIENT_ID);
             }
-            OutputStream clientIdsOs = new ByteArrayOutputStream();
+            val clientIdsOs = new ByteArrayOutputStream();
             writeClientIds(clientIds, clientIdsOs);
-            InputStream clientIdsIs = new ByteArrayInputStream(((ByteArrayOutputStream) clientIdsOs).toByteArray());
+            val clientIdsIs = new ByteArrayInputStream(((ByteArrayOutputStream) clientIdsOs).toByteArray());
             ftpController.sendFile(clientIdsIs, CLIENT_ID_FILE_NAME);
             logger.log(LogCategory.INFO, "Unregister client with id = '" + CLIENT_ID + "'");
         } catch (IOException e) {
@@ -63,12 +64,12 @@ public class ClientService {
     }
 
     private static List<Integer> readClientIds(InputStream inputStream) {
-        Logger logger = Logger.getLogger(ClientService.class.toString(), "readClientIds");
+        val logger = Logger.getLogger(ClientService.class.toString(), "readClientIds");
         List<Integer> ids = new ArrayList<>();
-        DataInputStream dataInputStream = new DataInputStream(inputStream);
+        val dataInputStream = new DataInputStream(inputStream);
         try {
             while (dataInputStream.available() > 0) {
-                int id = dataInputStream.readInt();
+                val id = dataInputStream.readInt();
                 ids.add(id);
             }
             dataInputStream.close();
@@ -79,10 +80,10 @@ public class ClientService {
     }
 
     private static void writeClientIds(List<Integer> ids, OutputStream clientIdsOs) {
-        Logger logger = Logger.getLogger(ClientService.class.toString(), "writeClientIds");
-        DataOutputStream dataOutputStream = new DataOutputStream(clientIdsOs);
+        val logger = Logger.getLogger(ClientService.class.toString(), "writeClientIds");
+        val dataOutputStream = new DataOutputStream(clientIdsOs);
         try {
-            for (int id : ids) {
+            for (val id : ids) {
                 dataOutputStream.writeInt(id);
             }
             dataOutputStream.close();
