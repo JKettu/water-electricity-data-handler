@@ -239,7 +239,7 @@ public class MainWindowController extends BaseWindowController<MainWindow> {
                         showSuccessWindow("Соединение с сервером было разорвано.");
                         xlsFileHandler.getErrorsArray().clear();
                         break;
-                    case "LOGOUT":
+                    case "LOGIN_FAILED":
                         showSuccessWindow("Не удалось зайти на сервер.");
                         xlsFileHandler.getErrorsArray().clear();
                         break;
@@ -291,7 +291,7 @@ public class MainWindowController extends BaseWindowController<MainWindow> {
                         showSuccessWindow("Соединение с сервером было разорвано.");
                         xlsxFileHandler.getErrorsArray().clear();
                         break;
-                    case "LOGOUT":
+                    case "LOGIN_FAILED":
                         showSuccessWindow("Не удалось зайти на сервер.");
                         xlsxFileHandler.getErrorsArray().clear();
                         break;
