@@ -1,21 +1,21 @@
-package handling;
+package file.handling;
 
 import common.DataType;
 import common.logger.LogCategory;
 import common.logger.Logger;
-import handling.util.DataGroupsGetter;
-import handling.util.HandlingType;
-import model.ElectricityDataModel;
-import model.WaterDataModel;
+import file.handling.util.DataGroupsGetter;
+import file.handling.util.HandlingType;
+import file.handling.model.ElectricityDataModel;
+import file.handling.model.WaterDataModel;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.hssf.util.CellReference;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
-import server.ClientService;
-import server.FTPController;
-import server.LockFile;
-import server.LockMonitor;
+import server.connector.ClientService;
+import server.connector.ftp.FTPConnector;
+import server.connector.lock.LockFile;
+import server.connector.lock.LockFileMonitor;
 
 import java.io.*;
 import java.math.BigDecimal;
@@ -38,12 +38,12 @@ public class XlsFileHandler {
     private String period = "";
     private String firstLine; //заголовок файла
     private XlsxFileHandler xlsxFileHandler;
-    private FTPController ftpController;
+    private FTPConnector ftpConnector;
     private List<String> errors;
 
     XlsFileHandler() {
         this.existedRegions = new boolean[70];
-        ftpController = new FTPController();
+        ftpConnector = new FTPConnector();
         errors = new ArrayList<>();
     }
 
@@ -70,24 +70,24 @@ public class XlsFileHandler {
     public boolean processWaterFileHandling(HandlingType handlingType) {
         Logger logger = Logger.getLogger(getClass().toString(), "processWaterFileHandling");
         try {
-            int threadSleepDelay = ClientService.CLIENT_ID * LockMonitor.LAST_LOG_CHECK_DELAY_MULTIPLIER;
+            int threadSleepDelay = ClientService.CLIENT_ID * LockFileMonitor.LAST_LOG_CHECK_DELAY_MULTIPLIER;
             logger.log(LogCategory.DEBUG, "Waiting for: '" + threadSleepDelay + "'");
             Thread.sleep(threadSleepDelay + ThreadLocalRandom.current().nextInt(5000, 10000));
-            synchronized (LockMonitor.lock) {
-                LockMonitor.lock.wait();
+            synchronized (LockFileMonitor.lockObject) {
+                LockFileMonitor.lockObject.wait();
             }
         } catch (Exception e) {
             logger.log(LogCategory.ERROR, "Error during waiting: " + e);
         }
-        LockFile lastClientLock = LockMonitor.getLockMonitor().getLastClientLock(serverFileName);
+        LockFile lastClientLock = LockFileMonitor.getLockMonitor().getLastClientLock(serverFileName);
         LockFile lock;
         if (lastClientLock == null) {
             lock = new LockFile(serverFileName, 0);
         } else {
             lock = new LockFile(serverFileName, lastClientLock.getLockClientIndex() + 1);
         }
-        ftpController.lockFile(lock);
-        while (ftpController.updateLock(lock)) {
+        ftpConnector.lockFile(lock);
+        while (ftpConnector.updateLock(lock)) {
         }
         boolean result = false;
         switch (handlingType) {
@@ -101,31 +101,31 @@ public class XlsFileHandler {
                 result = deleteWaterRegion();
                 break;
         }
-        ftpController.deleteLock(lock);
+        ftpConnector.deleteLock(lock);
         return result;
     }
 
     public boolean processElectricityFileHandling(HandlingType handlingType) {
         Logger logger = Logger.getLogger(getClass().toString(), "processElectricityFileHandling");
         try {
-            int threadSleepDelay = ClientService.CLIENT_ID * LockMonitor.LAST_LOG_CHECK_DELAY_MULTIPLIER;
+            int threadSleepDelay = ClientService.CLIENT_ID * LockFileMonitor.LAST_LOG_CHECK_DELAY_MULTIPLIER;
             logger.log(LogCategory.DEBUG, "Waiting for: " + "'" + threadSleepDelay + "'");
             Thread.sleep(threadSleepDelay + ThreadLocalRandom.current().nextInt(5000, 10000));
-            synchronized (LockMonitor.lock) {
-                LockMonitor.lock.wait();
+            synchronized (LockFileMonitor.lockObject) {
+                LockFileMonitor.lockObject.wait();
             }
         } catch (Exception e) {
             logger.log(LogCategory.ERROR, "Error during waiting: " + e);
         }
-        LockFile lastClientLock = LockMonitor.getLockMonitor().getLastClientLock(serverFileName);
+        LockFile lastClientLock = LockFileMonitor.getLockMonitor().getLastClientLock(serverFileName);
         LockFile lock;
         if (lastClientLock == null) {
             lock = new LockFile(serverFileName, 0);
         } else {
             lock = new LockFile(serverFileName, lastClientLock.getLockClientIndex() + 1);
         }
-        ftpController.lockFile(lock);
-        while (ftpController.updateLock(lock)) {
+        ftpConnector.lockFile(lock);
+        while (ftpConnector.updateLock(lock)) {
         }
 
         boolean result = false;
@@ -140,7 +140,7 @@ public class XlsFileHandler {
                 result = deleteElectricityRegion();
                 break;
         }
-        ftpController.deleteLock(lock);
+        ftpConnector.deleteLock(lock);
         return result;
     }
     //чтение страницы с отмеченными регионами
@@ -148,30 +148,30 @@ public class XlsFileHandler {
     public List<Integer> getServerFileRegions() {
         Logger logger = Logger.getLogger(getClass().toString(), "readRegionsPageFromServerFile");
         try {
-            int threadSleepDelay = ClientService.CLIENT_ID * LockMonitor.LAST_LOG_CHECK_DELAY_MULTIPLIER;
+            int threadSleepDelay = ClientService.CLIENT_ID * LockFileMonitor.LAST_LOG_CHECK_DELAY_MULTIPLIER;
             logger.log(LogCategory.DEBUG, "Waiting for: " + "'" + threadSleepDelay + "'");
             Thread.sleep(threadSleepDelay + ThreadLocalRandom.current().nextInt(5000, 10000));
-            synchronized (LockMonitor.lock) {
-                LockMonitor.lock.wait();
+            synchronized (LockFileMonitor.lockObject) {
+                LockFileMonitor.lockObject.wait();
             }
         } catch (Exception e) {
             logger.log(LogCategory.ERROR, "Error during waiting: " + e);
         }
-        LockFile lastClientLock = LockMonitor.getLockMonitor().getLastClientLock(serverFileName);
+        LockFile lastClientLock = LockFileMonitor.getLockMonitor().getLastClientLock(serverFileName);
         LockFile lock;
         if (lastClientLock == null) {
             lock = new LockFile(serverFileName, 0);
         } else {
             lock = new LockFile(serverFileName, lastClientLock.getLockClientIndex() + 1);
         }
-        ftpController.lockFile(lock);
-        while (ftpController.updateLock(lock)) {
+        this.ftpConnector.lockFile(lock);
+        while (this.ftpConnector.updateLock(lock)) {
         }
         List<Integer> regions = new ArrayList<>();
-        FTPController ftpController = new FTPController();
+        FTPConnector ftpConnector = new FTPConnector();
         Workbook wb = null;
         try {
-            InputStream inputFileStream = ftpController.getInputFileStream(serverFileName);
+            InputStream inputFileStream = ftpConnector.getInputFileStream(serverFileName);
             wb = WorkbookFactory.create(inputFileStream);
             regions = readRegionsFromSecondPage(wb);
         } catch (Exception e) {
@@ -183,9 +183,9 @@ public class XlsFileHandler {
             } catch (Exception wbCloseE) {
                 logger.log(LogCategory.ERROR, "Error during closing wb after regions reading error: " + wbCloseE);
             }
-            ftpController.deleteLock(lock);
+            ftpConnector.deleteLock(lock);
         }
-        ftpController.deleteLock(lock);
+        ftpConnector.deleteLock(lock);
         return regions;
     }
 
@@ -194,7 +194,7 @@ public class XlsFileHandler {
         Logger logger = Logger.getLogger(getClass().getName(), "deleteWaterRegion");
         logger.log(LogCategory.DEBUG, "Deleting region = '" + regionToDelete + "' from water file");
         try {
-            InputStream inputStream = ftpController.getInputFileStream(serverFileName);
+            InputStream inputStream = ftpConnector.getInputFileStream(serverFileName);
             Workbook wb = WorkbookFactory.create(inputStream);
             int group = 0;
             Sheet sheet = wb.getSheetAt(0); //номер листа в файле
@@ -270,7 +270,7 @@ public class XlsFileHandler {
         Logger logger = Logger.getLogger(getClass().getName(), "deleteElectricityRegion");
         logger.log(LogCategory.DEBUG, "Deleting region = '" + regionToDelete + "' from electricity file");
         try {
-            InputStream inputStream = ftpController.getInputFileStream(serverFileName);
+            InputStream inputStream = ftpConnector.getInputFileStream(serverFileName);
             Workbook wb = WorkbookFactory.create(inputStream);
             int group = 0;
             Sheet sheet = wb.getSheetAt(0); //номер листа в файле
@@ -586,7 +586,7 @@ public class XlsFileHandler {
         logger.log(LogCategory.DEBUG, "Reading server electricity file");
         try {
             if (serverFileName != null) {
-                InputStream inputStream = ftpController.getInputFileStream(serverFileName);
+                InputStream inputStream = ftpConnector.getInputFileStream(serverFileName);
                 Workbook wb = WorkbookFactory.create(inputStream);
                 Sheet sheet = wb.getSheetAt(0); //номер листа в файле
 
@@ -653,10 +653,10 @@ public class XlsFileHandler {
                         if (xlsxFileHandler
                                 .setWorkWithElectricityFileFromXls(serverFilePath, firstDate, secondDate, localFile,
                                         arrayForElectricity)) {
-                            errors.add(ftpController.getResult().toString());
+                            errors.add(ftpConnector.getResult().toString());
                             return true;
                         } else {
-                            errors.add(ftpController.getResult().toString());
+                            errors.add(ftpConnector.getResult().toString());
                             return false;
                         }
                     }
@@ -677,7 +677,7 @@ public class XlsFileHandler {
                 return false;
             }
         } catch (IOException | InvalidFormatException e) {
-            errors.add(ftpController.getResult().toString());
+            errors.add(ftpConnector.getResult().toString());
             logger.log(LogCategory.ERROR, "IOException/InvalidFormatException. Couldn't parse server electricity file");
             return false;
         }
@@ -689,7 +689,7 @@ public class XlsFileHandler {
         logger.log(LogCategory.DEBUG, "Reading server water file");
         try {
             if (serverFileName != null) {
-                InputStream inputStream = ftpController.getInputFileStream(serverFileName);
+                InputStream inputStream = ftpConnector.getInputFileStream(serverFileName);
                 Workbook wb = WorkbookFactory.create(inputStream);
                 readRegionsFromSecondPage(wb);
                 int group = 0;
@@ -749,10 +749,10 @@ public class XlsFileHandler {
                     /*if (localFile.getAbsolutePath().matches(".+\\.xlsx")) {
                         xlsxFileHandler = new XlsxFileHandler();
                         if (xlsxFileHandler.setWorkWithWaterFileFromXls(serverFilePath, file, arrayForWater)) {
-                            errors.add(ftpController.getResult().toString());
+                            errors.add(ftpConnector.getResult().toString());
                             return true;
                         } else {
-                            errors.add(ftpController.getResult().toString());
+                            errors.add(ftpConnector.getResult().toString());
                             return false;
                         }
                     }
@@ -773,7 +773,7 @@ public class XlsFileHandler {
                 return false;
             }
         } catch (IOException | InvalidFormatException e) {
-            errors.add(ftpController.getResult().toString());
+            errors.add(ftpConnector.getResult().toString());
             logger.log(LogCategory.ERROR, "IOException/InvalidFormatException. Couldn't parse server water file");
             return false;
         }
@@ -921,15 +921,15 @@ public class XlsFileHandler {
         }
         try {
             InputStream is = new ByteArrayInputStream(serverFileData.toByteArray());
-            ftpController.sendFile(is, serverFileName);
+            ftpConnector.sendFile(is, serverFileName);
         } catch (Exception e) {
             logger.log(LogCategory.ERROR, "Error during sending file to server: " + e);
             errors.clear();
-            errors.add(ftpController.getResult().toString());
+            errors.add(ftpConnector.getResult().toString());
             return false;
         }
 
-        errors.add(ftpController.getResult().toString());
+        errors.add(ftpConnector.getResult().toString());
         return true;
     }
 
@@ -1068,22 +1068,22 @@ public class XlsFileHandler {
          }
         try {
             InputStream is = new ByteArrayInputStream(serverFileData.toByteArray());
-            ftpController.sendFile(is, serverFileName);
+            ftpConnector.sendFile(is, serverFileName);
         } catch (Exception e) {
             logger.log(LogCategory.ERROR, "Error during sending file to server: " + e);
             errors.clear();
-            errors.add(ftpController.getResult().toString());
+            errors.add(ftpConnector.getResult().toString());
             return false;
         }
 
-        errors.add(ftpController.getResult().toString());
+        errors.add(ftpConnector.getResult().toString());
         return true;
     }
 
     public DataType getHeadlineFromServerFile(String serverFileName) {
         Logger logger = Logger.getLogger(getClass().getName(), "getHeadlineFromServerFile");
         try {
-            InputStream inputStream = ftpController.getInputFileStream(serverFileName);
+            InputStream inputStream = ftpConnector.getInputFileStream(serverFileName);
             Workbook wb = WorkbookFactory.create(inputStream);
             Sheet sheet = wb.getSheetAt(0); //номер листа в файле
             Row firstRow = sheet.getRow(0);

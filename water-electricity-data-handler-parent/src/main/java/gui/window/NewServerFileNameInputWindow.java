@@ -1,6 +1,6 @@
 package gui.window;
 
-import controller.NewServerFileNameInputWindowController;
+import gui.controller.NewServerFileNameInputWindowController;
 import gui.common.GuiCommonLib;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -18,6 +18,17 @@ import static gui.common.GuiCommonLib.createNewLineLabel;
 import static gui.common.GuiCommonLib.wrapNodeToCenteredHBox;
 
 public class NewServerFileNameInputWindow extends BaseWindow<NewServerFileNameInputWindowController> {
+    @Getter
+    private TextField fileNameInputTextField;
+
+    @Getter
+    private Label errorTextLabel;
+
+    @Getter
+    private Stage stage;
+
+    @Setter
+    private Scene ownerScene;
 
     private static final String INPUT_NEW_FILE_NAME_TEXT_LABEL =
             "    Введите название нового файла.\nВнимание! Название вводится без расширения.\n";
@@ -32,17 +43,23 @@ public class NewServerFileNameInputWindow extends BaseWindow<NewServerFileNameIn
 
     private Button createButton;
 
-    @Getter
-    private TextField fileNameInputTextField;
 
-    @Getter
-    private Label errorTextLabel;
+    public void setErrorText(String text) {
+        errorTextLabel.setText(text);
+    }
 
-    @Getter
-    private Stage stage;
+    @Override
+    public void bindController(NewServerFileNameInputWindowController controller) {
+        super.bindController(controller);
+        createButton.setOnMouseClicked(controller::processCreateButtonClick);
+    }
 
-    @Setter
-    private Scene ownerScene;
+    @Override
+    public void show() {
+        rootBox.getChildren().add(mainBox);
+        stage = GuiCommonLib.createStage(STAGE_TITLE, scene, ownerScene);
+    }
+
 
     @Override
     protected void buildWindow() {
@@ -98,20 +115,5 @@ public class NewServerFileNameInputWindow extends BaseWindow<NewServerFileNameIn
         createButton.setAlignment(Pos.CENTER);
     }
 
-    public void setErrorText(String text) {
-        errorTextLabel.setText(text);
-    }
-
-    @Override
-    public void bindController(NewServerFileNameInputWindowController controller) {
-        super.bindController(controller);
-        createButton.setOnMouseClicked(controller::processCreateButtonClick);
-    }
-
-    @Override
-    public void show() {
-        rootBox.getChildren().add(mainBox);
-        stage = GuiCommonLib.createStage(STAGE_TITLE, scene, ownerScene);
-    }
 
 }

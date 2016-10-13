@@ -1,11 +1,11 @@
-import controller.MainWindowController;
+import gui.controller.MainWindowController;
 import gui.common.WindowsFactory;
 import gui.window.main.MainWindow;
 import javafx.application.Application;
 import javafx.stage.Stage;
 import lombok.val;
-import server.ClientService;
-import server.LockMonitor;
+import server.connector.ClientService;
+import server.connector.lock.LockFileMonitor;
 
 public class MainApplication extends Application {
 
@@ -29,14 +29,14 @@ public class MainApplication extends Application {
     }
 
     private void processStartupActions() {
-        LockMonitor.getLockMonitor().startMonitoring();
+        LockFileMonitor.getLockMonitor().startMonitoring();
         ClientService.registerClient();
     }
 
     private void addShutdownHook() {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             ClientService.unregisterClient();
-            LockMonitor.getLockMonitor().forceDeleteLocks();
+            LockFileMonitor.getLockMonitor().forceDeleteLocks();
         }));
     }
 

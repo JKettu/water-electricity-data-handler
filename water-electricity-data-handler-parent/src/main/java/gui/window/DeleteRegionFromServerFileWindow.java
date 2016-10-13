@@ -1,6 +1,6 @@
 package gui.window;
 
-import controller.DeleteRegionFromServerFileWindowController;
+import gui.controller.DeleteRegionFromServerFileWindowController;
 import gui.common.GuiConstants;
 import gui.window.main.MainWindow;
 import javafx.geometry.Pos;
@@ -18,11 +18,6 @@ import lombok.val;
 import static gui.common.GuiCommonLib.*;
 
 public class DeleteRegionFromServerFileWindow extends BaseWindow<DeleteRegionFromServerFileWindowController> {
-
-    private static final String DELETE_REGION_BUTTON_TEXT = "Удалить регион";
-    private static final String DELETE_REGION_STAGE_TITLE = "Удаление региона из серверного файла";
-    private static final String SELECT_DELETING_REGION_TEXT_LABEL = "Выберите регион, который хотите удалить";
-
     @Getter
     private Button deleteRegionButton;
 
@@ -32,11 +27,47 @@ public class DeleteRegionFromServerFileWindow extends BaseWindow<DeleteRegionFro
     @Getter
     private Stage stage;
 
+    private static final String DELETE_REGION_BUTTON_TEXT = "Удалить регион";
+    private static final String DELETE_REGION_STAGE_TITLE = "Удаление региона из серверного файла";
+    private static final String SELECT_DELETING_REGION_TEXT_LABEL = "Выберите регион, который хотите удалить";
+
     private VBox rootBox;
     private VBox mainBox;
     private Label currentTaskInfoLabel;
     private VBox progressBarBox;
     private Scene scene;
+
+
+    public void setCurrentTaskInfo(String text) {
+        currentTaskInfoLabel.setText(text);
+    }
+
+    public void showProgressBar() {
+        val progressBar = new ProgressBar();
+        progressBarBox.getChildren().addAll(progressBar);
+    }
+
+    public void hideProgressBar() {
+        progressBarBox.getChildren().clear();
+    }
+
+    @Override
+    public void bindController(DeleteRegionFromServerFileWindowController controller) {
+        super.bindController(controller);
+        deleteRegionButton.setOnMouseClicked(controller::processDeleteRegionButtonClick);
+        regionsComboBox.valueProperty().addListener(controller::processRegionsComboBoxValueChanging);
+        regionsComboBox.setOnMouseClicked(controller::processRegionsComboBoxClick);
+    }
+
+    @Override
+    public void show() {
+        val mainWindowController = controller.getMainWindowController();
+        val mainWindow = mainWindowController.getWindow();
+        val ownerScene = mainWindow.getScene();
+        stage = createStage(DELETE_REGION_STAGE_TITLE, scene, ownerScene);
+        rootBox.getChildren().addAll(mainBox);
+    }
+
 
     @Override
     protected void buildWindow() {
@@ -117,36 +148,4 @@ public class DeleteRegionFromServerFileWindow extends BaseWindow<DeleteRegionFro
         deleteRegionButton = new Button(DELETE_REGION_BUTTON_TEXT);
         deleteRegionButton.setAlignment(Pos.CENTER);
     }
-
-
-    public void setCurrentTaskInfo(String text) {
-        currentTaskInfoLabel.setText(text);
-    }
-
-    public void showProgressBar() {
-        val progressBar = new ProgressBar();
-        progressBarBox.getChildren().addAll(progressBar);
-    }
-
-    public void hideProgressBar() {
-        progressBarBox.getChildren().clear();
-    }
-
-    @Override
-    public void bindController(DeleteRegionFromServerFileWindowController controller) {
-        super.bindController(controller);
-        deleteRegionButton.setOnMouseClicked(controller::processDeleteRegionButtonClick);
-        regionsComboBox.valueProperty().addListener(controller::processRegionsComboBoxValueChanging);
-        regionsComboBox.setOnMouseClicked(controller::processRegionsComboBoxClick);
-    }
-
-    @Override
-    public void show() {
-        val mainWindowController = controller.getMainWindowController();
-        val mainWindow = mainWindowController.getWindow();
-        val ownerScene = mainWindow.getScene();
-        stage = createStage(DELETE_REGION_STAGE_TITLE, scene, ownerScene);
-        rootBox.getChildren().addAll(mainBox);
-    }
-
 }

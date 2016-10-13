@@ -1,11 +1,11 @@
-package controller;
+package gui.controller;
 
 import common.CommonUtils;
 import common.ConnectionFailedException;
 import common.DataType;
 import common.logger.LogCategory;
 import common.logger.Logger;
-import controller.common.CommonControllerMethods;
+import gui.controller.common.CommonControllerMethods;
 import gui.common.GuiConstants;
 import gui.common.WindowsFactory;
 import gui.window.DeleteRegionFromServerFileWindow;
@@ -13,16 +13,16 @@ import gui.window.ErrorWindow;
 import gui.window.NewServerFileNameInputWindow;
 import gui.window.SuccessWindow;
 import gui.window.main.MainWindow;
-import handling.XlsFileHandler;
-import handling.XlsxFileHandler;
-import handling.util.HandlingType;
+import file.handling.XlsFileHandler;
+import file.handling.XlsxFileHandler;
+import file.handling.util.HandlingType;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.scene.input.MouseEvent;
 import lombok.Setter;
 import lombok.val;
-import server.FTPController;
-import server.LockMonitor;
+import server.connector.ftp.FTPConnector;
+import server.connector.lock.LockFileMonitor;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -51,7 +51,7 @@ public class MainWindowController extends BaseWindowController<MainWindow> {
     private XlsxFileHandler xlsxFileHandler;
     private File loadedFile;
     private boolean loadedFileReadyForSend;
-    private FTPController ftpController;
+    private FTPConnector ftpConnector;
     private List<String> serverFileNames;
     private XlsFileHandler xlsFileHandler;
 
@@ -80,7 +80,7 @@ public class MainWindowController extends BaseWindowController<MainWindow> {
     }
 
     private void reloadServerFileNames() {
-        val ftpController = new FTPController();
+        val ftpController = new FTPConnector();
         try {
             serverFileNames = ftpController.getServerFileNames();
         } catch (ConnectionFailedException e) {
@@ -176,7 +176,7 @@ public class MainWindowController extends BaseWindowController<MainWindow> {
 
     private boolean sendXlsxFileDataToServer() {
         xlsxFileHandler.setServerFileName(selectedServerFileName);
-        xlsxFileHandler.setServerFilePath(ftpController.getServerFolder() + "/" + selectedServerFileName);
+        xlsxFileHandler.setServerFilePath(ftpConnector.getServerFolder() + "/" + selectedServerFileName);
         if (selectedDataType.equals(DataType.ELECTRICITY)) {
             if (xlsxFileHandler.WorkWithXlsxFileElectricity(loadedFile)) {
                 return true;
@@ -411,7 +411,7 @@ public class MainWindowController extends BaseWindowController<MainWindow> {
                     readServerFile();
                 } catch (Exception e) {
                     logger.log(LogCategory.ERROR, "Ошибка обработки файлов: " + e);
-                    LockMonitor.getLockMonitor().forceDeleteLocks();
+                    LockFileMonitor.getLockMonitor().forceDeleteLocks();
                 }
                 return null;
             }
@@ -556,7 +556,7 @@ public class MainWindowController extends BaseWindowController<MainWindow> {
                                     readServerFile();
                                 } catch (Exception e) {
                                     logger.log(LogCategory.ERROR, "Ошибка обработки файлов: " + e);
-                                    LockMonitor.getLockMonitor().forceDeleteLocks();
+                                    LockFileMonitor.getLockMonitor().forceDeleteLocks();
                                 }
                                 return null;
                             }

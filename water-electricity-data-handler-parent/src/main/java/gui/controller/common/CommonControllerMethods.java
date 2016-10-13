@@ -1,4 +1,4 @@
-package controller.common;
+package gui.controller.common;
 
 public class CommonControllerMethods {
 

@@ -1,4 +1,4 @@
-package server;
+package server.connector.ftp;
 
 public enum FTPErrorCode {
     CONNECTION_FAILED,

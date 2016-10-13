@@ -30,10 +30,10 @@ public class ConfigProperties {
     }
 
     @SneakyThrows
-    public  <T> T getPropertyValue(String propertyName) {
+    public String getPropertyValue(String propertyName) {
         val properties = new Properties();
         properties.load(configFileReader);
-        return (T) properties.getProperty(propertyName);
+        return properties.getProperty(propertyName);
     }
 
 }

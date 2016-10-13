@@ -1,6 +1,6 @@
 package gui.window;
 
-import controller.SuccessWindowController;
+import gui.controller.SuccessWindowController;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -23,6 +23,25 @@ public class SuccessWindow extends BaseWindow<SuccessWindowController> {
     private Button againButton;
     private Button exitButton;
     private Label label;
+
+
+    public void setSuccessText(String text) {
+        label.setText(text);
+    }
+
+    @Override
+    public void bindController(SuccessWindowController controller) {
+        super.bindController(controller);
+
+        againButton.setOnMouseClicked(controller::processAgainButtonClick);
+        exitButton.setOnMouseClicked(controller::processExitButtonClick);
+    }
+
+    @Override
+    public void show() {
+        rootBox.getChildren().addAll(labelBox, createNewLineLabel(), buttonsBox);
+    }
+
 
     @Override
     protected void buildWindow() {
@@ -62,23 +81,5 @@ public class SuccessWindow extends BaseWindow<SuccessWindowController> {
         createButtonsBox();
         createLabelBox();
     }
-
-    public void setSuccessText(String text) {
-        label.setText(text);
-    }
-
-    @Override
-    public void bindController(SuccessWindowController controller) {
-        super.bindController(controller);
-
-        againButton.setOnMouseClicked(controller::processAgainButtonClick);
-        exitButton.setOnMouseClicked(controller::processExitButtonClick);
-    }
-
-    @Override
-    public void show() {
-        rootBox.getChildren().addAll(labelBox, createNewLineLabel(), buttonsBox);
-    }
-
 
 }

@@ -1,4 +1,4 @@
-package controller;
+package gui.controller;
 
 import gui.window.BaseWindow;
 import lombok.Getter;

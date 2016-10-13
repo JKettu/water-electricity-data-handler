@@ -1,39 +1,37 @@
-package server;
+package server.connector.lock;
 
-import common.lock.TemporaryDeleteOnExitFiles;
+import common.TemporaryDeleteOnExitFiles;
 import common.logger.LogCategory;
 import common.logger.Logger;
-import lombok.Getter;
 import lombok.val;
+import server.connector.ftp.FTPConnector;
 
 import java.io.File;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class LockMonitor {
+public class LockFileMonitor {
     public static final int LAST_LOG_CHECK_DELAY_MULTIPLIER = 5000;
-    public static final Object lock = new Object();
+    public static final Object lockObject = new Object();
 
-    @Getter
     private List<LockFile> locks;
 
-    private static LockMonitor instance;
+    private static LockFileMonitor instance;
 
     private Map<String, LockFile> lastClientLocks;
 
 
-    private LockMonitor() {
+    private LockFileMonitor() {
         locks = new ArrayList<>();
         lastClientLocks = new HashMap<>();
     }
 
-    public static LockMonitor getLockMonitor() {
+    public static LockFileMonitor getLockMonitor() {
         if (instance == null) {
-            instance = new LockMonitor();
+            instance = new LockFileMonitor();
         }
         return instance;
     }
-
 
     public void startMonitoring() {
         val thread = new Thread(this::monitor);
@@ -46,7 +44,7 @@ public class LockMonitor {
     }
 
     public void forceDeleteLocks() {
-        val ftpController = new FTPController();
+        val ftpController = new FTPConnector();
         for (val lockFile : TemporaryDeleteOnExitFiles.currentFiles) {
             val file = new File(lockFile);
             if (file.exists() && file.isFile()) {
@@ -57,12 +55,19 @@ public class LockMonitor {
         }
     }
 
+    public List<LockFile> getServerLockFiles(String lockServerFileName) {
+        return locks.stream()
+                .filter(lock -> lock.getServerFileName().equals(lockServerFileName))
+                .collect(Collectors.toList());
+    }
+
 
     private void monitor() {
         while (true) {
             val logger = Logger.getLogger(getClass().toString(), "startMonitoring");
-            val ftpController = new FTPController();
-            locks = ftpController.getLockFiles();
+            val lockFileController = new LockFileController();
+            val ftpController = new FTPConnector();
+            locks = lockFileController.getLockFiles();
             List<String> serverFileNames;
             try {
                 serverFileNames = ftpController.getServerFileNames();
@@ -82,8 +87,8 @@ public class LockMonitor {
                 val lastClientLock = serverFileNameLocks.get(serverFileNameLocks.size() - 1);
                 lastClientLocks.put(serverFileName, lastClientLock);
             }
-            synchronized (lock) {
-                lock.notifyAll();
+            synchronized (lockObject) {
+                lockObject.notifyAll();
             }
         }
     }

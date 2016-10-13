@@ -1,8 +1,7 @@
-package common.lock;
+package common;
 
 import common.logger.LogCategory;
 import common.logger.Logger;
-import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 
 import java.util.List;

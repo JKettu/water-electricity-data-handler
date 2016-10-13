@@ -1,7 +1,7 @@
 package gui.window;
 
 
-import controller.ErrorWindowController;
+import gui.controller.ErrorWindowController;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -19,6 +19,22 @@ public class ErrorWindow extends BaseWindow<ErrorWindowController> {
     private Label errorTextLabel;
     private HBox buttonsBox;
     private HBox labelBox;
+
+    public void setErrorText(String errorText) {
+        errorTextLabel.setText(errorText);
+    }
+
+    @Override
+    public void bindController(ErrorWindowController controller) {
+        super.bindController(controller);
+        exitButton.setOnMouseClicked(controller::processExitButtonClick);
+    }
+
+    @Override
+    public void show() {
+        rootBox.getChildren().addAll(labelBox, createNewLineLabel(), buttonsBox);
+    }
+
 
     @Override
     protected void buildWindow() {
@@ -49,21 +65,5 @@ public class ErrorWindow extends BaseWindow<ErrorWindowController> {
 
     private void createExitButton() {
         exitButton = new Button(EXIT_BUTTON_TEXT);
-    }
-
-
-    public void setErrorText(String errorText) {
-        errorTextLabel.setText(errorText);
-    }
-
-    @Override
-    public void bindController(ErrorWindowController controller) {
-        super.bindController(controller);
-        exitButton.setOnMouseClicked(controller::processExitButtonClick);
-    }
-
-    @Override
-    public void show() {
-        rootBox.getChildren().addAll(labelBox, createNewLineLabel(), buttonsBox);
     }
 }

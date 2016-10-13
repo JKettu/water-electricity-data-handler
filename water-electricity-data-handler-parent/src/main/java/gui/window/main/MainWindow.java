@@ -1,7 +1,7 @@
 package gui.window.main;
 
 import com.sun.javafx.collections.ObservableListWrapper;
-import controller.MainWindowController;
+import gui.controller.MainWindowController;
 import gui.window.BaseWindow;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -18,10 +18,6 @@ import java.util.List;
 import static gui.common.GuiCommonLib.*;
 
 public class MainWindow extends BaseWindow<MainWindowController> {
-    private static final String SEND_FILE_BUTTON_TEXT = "Отправить";
-    private static final String DELETE_REGION_BUTTON_TEXT = "Удалить регион из файла";
-    private static final String EXIT_BUTTON_TEXT = "Выход";
-
     @Getter
     private HBox sendFileAndDeleteRegionButtonsBox;
 
@@ -43,12 +39,76 @@ public class MainWindow extends BaseWindow<MainWindowController> {
     @Getter
     private MainWindowRightBlock rightBlock;
 
+    private static final String SEND_FILE_BUTTON_TEXT = "Отправить";
+    private static final String DELETE_REGION_BUTTON_TEXT = "Удалить регион из файла";
+    private static final String EXIT_BUTTON_TEXT = "Выход";
+
     private HBox mainBox;
     private HBox exitButtonBox;
     private VBox currentTaskInfoTextBox;
     private VBox rootBox;
     private Label currentTaskInfoTextLabel;
     private VBox progressBarBox;
+
+
+    @Override
+    public void show() {
+        val windowElements = rootBox.getChildren();
+        windowElements.clear();
+        rootBox.getChildren().addAll(mainBox,
+                currentTaskInfoTextBox,
+                progressBarBox,
+                createNewLineLabel(),
+                sendFileAndDeleteRegionButtonsBox,
+                createNewLineLabel(),
+                exitButtonBox);
+    }
+
+    public void reloadWindowElements() {
+        buildWindow();
+        show();
+    }
+
+    public void clearWindow() {
+        val windowElements = rootBox.getChildren();
+        windowElements.clear();
+    }
+
+    public void setCurrentTaskInfoText(String text) {
+        currentTaskInfoTextLabel.setText(text);
+    }
+
+    public void setLoadFileInfoText(String text) {
+        val loadFileWidget = leftBlock.getLoadFileWidget();
+        val loadFileInfoTextLabel = loadFileWidget.getLoadFileInfoTextLabel();
+        loadFileInfoTextLabel.setText(text);
+    }
+
+    public void showProgressBar() {
+        val progressBar = new ProgressBar();
+        progressBarBox.getChildren().add(progressBar);
+    }
+
+    public void hideProgressBar() {
+        progressBarBox.getChildren().clear();
+    }
+
+    public void setServerFileNames(List<String> names) {
+        ObservableListWrapper<String> serverFileNamesObservableList = new ObservableListWrapper<>(names);
+        val mainWindowServerFilesBox = rightBlock.getServerFilesBox();
+        mainWindowServerFilesBox.setItems(serverFileNamesObservableList);
+    }
+
+    @Override
+    public void bindController(MainWindowController controller) {
+        super.bindController(controller);
+        val serverFilesBox = rightBlock.getServerFilesBox();
+        serverFilesBox.setOnMouseClicked(controller::processServerFilesBoxClick);
+        sendFileButton.setOnMouseClicked(controller::processSendFileButtonClick);
+        exitButton.setOnMouseClicked(controller::processExitButtonClick);
+        deleteRegionButton.setOnMouseClicked(controller::processDeleteRegionButtonClick);
+    }
+
 
     @Override
     protected void buildWindow() {
@@ -59,7 +119,6 @@ public class MainWindow extends BaseWindow<MainWindowController> {
         createContainers();
         scene = buildScene(rootBox);
     }
-
 
     private void createRootBox() {
         rootBox = new VBox();
@@ -122,62 +181,4 @@ public class MainWindow extends BaseWindow<MainWindowController> {
         sendFileButton = new Button(SEND_FILE_BUTTON_TEXT);
     }
 
-
-    @Override
-    public void show() {
-        val windowElements = rootBox.getChildren();
-        windowElements.clear();
-        rootBox.getChildren().addAll(mainBox,
-                currentTaskInfoTextBox,
-                progressBarBox,
-                createNewLineLabel(),
-                sendFileAndDeleteRegionButtonsBox,
-                createNewLineLabel(),
-                exitButtonBox);
-    }
-
-    public void reloadWindowElements() {
-        buildWindow();
-        show();
-    }
-
-    public void clearWindow() {
-        val windowElements = rootBox.getChildren();
-        windowElements.clear();
-    }
-
-    public void setCurrentTaskInfoText(String text) {
-        currentTaskInfoTextLabel.setText(text);
-    }
-
-    public void setLoadFileInfoText(String text) {
-        val loadFileWidget = leftBlock.getLoadFileWidget();
-        val loadFileInfoTextLabel = loadFileWidget.getLoadFileInfoTextLabel();
-        loadFileInfoTextLabel.setText(text);
-    }
-
-    public void showProgressBar() {
-        val progressBar = new ProgressBar();
-        progressBarBox.getChildren().add(progressBar);
-    }
-
-    public void hideProgressBar() {
-        progressBarBox.getChildren().clear();
-    }
-
-    public void setServerFileNames(List<String> names) {
-        ObservableListWrapper<String> serverFileNamesObservableList = new ObservableListWrapper<>(names);
-        val mainWindowServerFilesBox = rightBlock.getServerFilesBox();
-        mainWindowServerFilesBox.setItems(serverFileNamesObservableList);
-    }
-
-    @Override
-    public void bindController(MainWindowController controller) {
-        super.bindController(controller);
-        val serverFilesBox = rightBlock.getServerFilesBox();
-        serverFilesBox.setOnMouseClicked(controller::processServerFilesBoxClick);
-        sendFileButton.setOnMouseClicked(controller::processSendFileButtonClick);
-        exitButton.setOnMouseClicked(controller::processExitButtonClick);
-        deleteRegionButton.setOnMouseClicked(controller::processDeleteRegionButtonClick);
-    }
 }

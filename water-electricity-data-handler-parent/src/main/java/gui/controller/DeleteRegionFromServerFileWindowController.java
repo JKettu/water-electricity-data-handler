@@ -1,11 +1,13 @@
-package controller;
+package gui.controller;
 
 import com.sun.javafx.collections.ObservableListWrapper;
 import common.DataType;
 import common.ServerFilesUtils;
+import common.logger.LogCategory;
+import common.logger.Logger;
 import gui.window.DeleteRegionFromServerFileWindow;
-import handling.XlsFileHandler;
-import handling.util.HandlingType;
+import file.handling.XlsFileHandler;
+import file.handling.util.HandlingType;
 import javafx.beans.value.ObservableValue;
 import javafx.concurrent.Task;
 import javafx.scene.input.MouseEvent;
@@ -99,7 +101,10 @@ public class DeleteRegionFromServerFileWindowController extends BaseWindowContro
             @Override
             protected Void call() throws Exception {
                 String serverFileName = mainWindowController.getServerFileName();
-                loadedRegions = ServerFilesUtils.getRegions(serverFileName);
+                val logger = Logger.getLogger(ServerFilesUtils.class.toString(), "getRegions");
+                logger.log(LogCategory.INFO, "Getting regions from file = '" + serverFileName + "'");
+                val xlsFileHandler = new XlsFileHandler(serverFileName);
+                loadedRegions = xlsFileHandler.getServerFileRegions();
                 return null;
             }
         };

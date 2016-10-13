@@ -19,7 +19,7 @@ public class MainWindowLeftBlock extends VBox {
     private RadioButton electricityRadioButton;
     private LoadFileWidget loadFileWidget;
 
-    MainWindowLeftBlock() {
+    public MainWindowLeftBlock() {
         createElectricityRadioButton();
         createWaterRadioButton();
         loadFileWidget = new LoadFileWidget();

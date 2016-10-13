@@ -1,6 +1,6 @@
 package gui.window;
 
-import controller.BaseWindowController;
+import gui.controller.BaseWindowController;
 import lombok.Getter;
 
 @Getter

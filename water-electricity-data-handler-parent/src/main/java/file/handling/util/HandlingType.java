@@ -1,4 +1,4 @@
-package handling.util;
+package file.handling.util;
 
 public enum HandlingType {
     CREATE,

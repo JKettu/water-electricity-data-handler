@@ -1,4 +1,4 @@
-package controller;
+package gui.controller;
 
 import gui.window.NewServerFileNameInputWindow;
 import javafx.scene.input.MouseEvent;

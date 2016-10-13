@@ -1,9 +1,9 @@
-package server;
+package server.connector.ftp;
 
 
 import common.config.ConfigProperties;
 import common.config.ConfigPropertiesSections;
-import common.lock.TemporaryDeleteOnExitFiles;
+import common.TemporaryDeleteOnExitFiles;
 import common.logger.LogCategory;
 import common.logger.Logger;
 import lombok.Cleanup;
@@ -20,24 +20,25 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class FTPController {
+public class FTPConnector {
     private final static String CONFIG_HOST_PROPERTY_KEY = "host";
     private final static String CONFIG_FOLDER_PROPERTY_KEY = "folder";
     private final static String CONFIG_LOGIN_PROPERTY_KEY = "login";
     private final static String CONFIG_PASSWORD_PROPERTY_KEY = "password";
     private final static String CONFIG_PORT_PROPERTY_KEY = "port";
     private final static String UTF_8 = "UTF-8";
-    private static final String LOCK_FILE_TYPE = ".lock";
-    private static final String ID_FLE_TYPE = ".txt";
+    private final static String LOCK_FILE_TYPE = ".lockObject";
+    private final static String ID_FLE_TYPE = ".txt";
 
     @Getter
     private FTPErrorCode ftpErrorCode;
 
     private FTPClient ftpClient;
 
-    public FTPController() {
+    public FTPConnector() {
         ftpClient = new FTPClient();
     }
+
 
     public List<String> getServerFileNames() {
         val logger = Logger.getLogger(getClass().getName(), "getServerFileNames");
@@ -97,7 +98,6 @@ public class FTPController {
         if (!tryToLogIn()) {
             return false;
         }
-
         val serverFilePath = formatServerFilePath(serverFileName);
         boolean fileStoredSuccessfully = false;
         try {
@@ -125,11 +125,9 @@ public class FTPController {
         if (tryToConnect()) {
             return false;
         }
-
         if (!tryToLogIn()) {
             return false;
         }
-
         val logger = Logger.getLogger(getClass().toString(), "deleteFile");
         val serverFilePath = formatServerFilePath(serverFileName);
         boolean fileWasSuccessfullyDeleted = false;
@@ -155,6 +153,31 @@ public class FTPController {
         return fileWasSuccessfullyDeleted;
     }
 
+    public List<String> getFilesNames() {
+        List<String> filesNames = new ArrayList<>();
+        if (!tryToConnect()) {
+            return null;
+        }
+        if (!tryToLogIn()) {
+            return null;
+        }
+        val config = ConfigProperties.getConfigProperties(ConfigPropertiesSections.FTP);
+        String serverFolder = config.getPropertyValue(CONFIG_FOLDER_PROPERTY_KEY);
+        val logger = Logger.getLogger(getClass().getName(), "endSession");
+        try {
+            val files = ftpClient.listFiles(serverFolder);
+            if (files.length > 0) {
+                Arrays.stream(files).forEach(file -> filesNames.add(file.getName()));
+            }
+        } catch (Exception e) {
+            ftpErrorCode = FTPErrorCode.FILE_NAMES_GETTING_ERROR;
+            logger.log(LogCategory.ERROR, "Error during getting server files: " + e);
+        } finally {
+            disconnect();
+        }
+        return filesNames;
+    }
+
 
     private boolean tryToConnect() {
         val logger = Logger.getLogger(getClass().getName(), "tryToConnect");
@@ -162,7 +185,7 @@ public class FTPController {
         try {
             ftpClient.setControlEncoding(UTF_8);
             String host = config.getPropertyValue(CONFIG_HOST_PROPERTY_KEY);
-            int port = config.getPropertyValue(CONFIG_PORT_PROPERTY_KEY);
+            int port = Integer.parseInt(config.getPropertyValue(CONFIG_PORT_PROPERTY_KEY));
             ftpClient.connect(host, port);
             ftpClient.enterLocalPassiveMode();
             ftpClient.setFileType(FTP.BINARY_FILE_TYPE);
@@ -218,30 +241,6 @@ public class FTPController {
         logger.log(LogCategory.INFO, "Disconnected");
     }
 
-    private List<String> getFilesNames() {
-        List<String> filesNames = new ArrayList<>();
-        if (!tryToConnect()) {
-            return null;
-        }
-        if (!tryToLogIn()) {
-            return null;
-        }
-        val config = ConfigProperties.getConfigProperties(ConfigPropertiesSections.FTP);
-        String serverFolder = config.getPropertyValue(CONFIG_FOLDER_PROPERTY_KEY);
-        val logger = Logger.getLogger(getClass().getName(), "endSession");
-        try {
-            val files = ftpClient.listFiles(serverFolder);
-            if (files.length > 0) {
-                Arrays.stream(files).forEach(file -> filesNames.add(file.getName()));
-            }
-        } catch (Exception e) {
-            ftpErrorCode = FTPErrorCode.FILE_NAMES_GETTING_ERROR;
-            logger.log(LogCategory.ERROR, "Error during getting server files: " + e);
-        } finally {
-            disconnect();
-        }
-        return filesNames;
-    }
 
     private String formatServerFilePath(String serverFileName) {
         val config = ConfigProperties.getConfigProperties(ConfigPropertiesSections.FTP);

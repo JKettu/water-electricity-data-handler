@@ -1,4 +1,4 @@
-package model;
+package file.handling.model;
 
 import lombok.Data;
 

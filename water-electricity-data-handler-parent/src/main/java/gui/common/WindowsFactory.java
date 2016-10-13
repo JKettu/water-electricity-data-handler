@@ -1,6 +1,6 @@
 package gui.common;
 
-import controller.BaseWindowController;
+import gui.controller.BaseWindowController;
 import gui.window.BaseWindow;
 import lombok.SneakyThrows;
 import lombok.val;

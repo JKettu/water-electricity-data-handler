@@ -1,7 +1,7 @@
-package controller;
+package gui.controller;
 
 import common.DataType;
-import controller.common.CommonControllerMethods;
+import gui.controller.common.CommonControllerMethods;
 import gui.window.SuccessWindow;
 import javafx.scene.input.MouseEvent;
 import lombok.Setter;

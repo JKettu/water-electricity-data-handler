@@ -1,7 +1,7 @@
-package controller;
+package gui.controller;
 
 
-import controller.common.CommonControllerMethods;
+import gui.controller.common.CommonControllerMethods;
 import gui.window.ErrorWindow;
 import javafx.scene.input.MouseEvent;
 

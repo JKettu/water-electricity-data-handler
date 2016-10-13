@@ -13,7 +13,7 @@ public class MainWindowRightBlock extends VBox {
 
     private ComboBox<String> serverFilesBox;
 
-    MainWindowRightBlock() {
+    public MainWindowRightBlock() {
         Label selectServerFileTextLabel = createSelectServerFileTextLabel();
         createServerFilesBox();
         getChildren().addAll(selectServerFileTextLabel,

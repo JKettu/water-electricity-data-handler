@@ -1,18 +1,18 @@
 
-package handling;
+package file.handling;
 
 import common.DataType;
 import common.logger.LogCategory;
 import common.logger.Logger;
-import handling.util.DataGroupsGetter;
-import model.ElectricityDataModel;
-import model.WaterDataModel;
+import file.handling.model.ElectricityDataModel;
+import file.handling.model.WaterDataModel;
+import file.handling.util.DataGroupsGetter;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.ss.util.CellReference;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import server.FTPController;
+import server.connector.ftp.FTPConnector;
 
 import java.io.*;
 import java.math.BigDecimal;
@@ -36,13 +36,13 @@ public class XlsxFileHandler {
     private String serverFilePath = "";//путь к файлу с сервера
     private String firstLine; //заголовок файла
     private XlsFileHandler xlsFileHandler;
-    private FTPController ftpController;
+    private FTPConnector ftpConnector;
     private List<String> errors;
 
     public XlsxFileHandler() {
         this.checkRegion = new boolean[70];
         errors = new ArrayList<>();
-        ftpController = new FTPController();
+        ftpConnector = new FTPConnector();
     }
 
     public List<String> getErrorsArray() {
@@ -90,9 +90,9 @@ public class XlsxFileHandler {
         try {
             int region = getRegion(filePath); //считывание региона
             if (region == 0) {
-                ftpController.sendFile(new FileInputStream(filePath), serverFilePath);
+                ftpConnector.sendFile(new FileInputStream(filePath), serverFilePath);
                 logger.log(LogCategory.INFO, "Rewriting water server file");
-                errors.add(ftpController.getResult().toString());
+                errors.add(ftpConnector.getResult().toString());
                 return true;
             }
             if (!checkRegion[region - 1]) {//если региона нет
@@ -201,9 +201,9 @@ public class XlsxFileHandler {
         try {
             int region = getRegion(filePath); //считывание региона
             if (region == 0) {
-                ftpController.sendFile(new FileInputStream(filePath), serverFilePath);
+                ftpConnector.sendFile(new FileInputStream(filePath), serverFilePath);
                 logger.log(LogCategory.INFO, "Rewriting server electricity file");
-                errors.add(ftpController.getResult().toString());
+                errors.add(ftpConnector.getResult().toString());
                 return true;
             }
             if (!checkRegion[region - 1]) {//если региона ещё не было
@@ -322,7 +322,7 @@ public class XlsxFileHandler {
         logger.log(LogCategory.DEBUG, "Reading server electricity file");
         try {
             if (fileFromServerPath != null) {
-                InputStream inputStream = ftpController.getInputFileStream(fileFromServerPath);
+                InputStream inputStream = ftpConnector.getInputFileStream(fileFromServerPath);
                 XSSFWorkbook wb = new XSSFWorkbook(inputStream);
                 Sheet sheet = wb.getSheetAt(0); //номер листа в файле
                 Row firstRow = sheet.getRow(0);
@@ -387,10 +387,10 @@ public class XlsxFileHandler {
                         if (xlsFileHandler
                                 .setWorkWithElectricityFileFromXlsx(firstDate, secondDate,
                                         arrayForElectricity)) {
-                            errors.add(ftpController.getResult().toString());
+                            errors.add(ftpConnector.getResult().toString());
                             return true;
                         } else {
-                            errors.add(ftpController.getResult().toString());
+                            errors.add(ftpConnector.getResult().toString());
                             return false;
                         }
                     } //чтение данных из файла с компьютера в массив
@@ -410,7 +410,7 @@ public class XlsxFileHandler {
                 return false;
             }
         } catch (IOException e) {
-            errors.add(ftpController.getResult().toString());
+            errors.add(ftpConnector.getResult().toString());
             logger.log(LogCategory.ERROR, "IOException. Couldn't parse server electricity file");
             return false;
         }
@@ -422,7 +422,7 @@ public class XlsxFileHandler {
         logger.log(LogCategory.DEBUG, "Reading server water file");
         try {
             if (fileFromServerPath != null) {
-                InputStream inputStream = ftpController.getInputFileStream(fileFromServerPath);
+                InputStream inputStream = ftpConnector.getInputFileStream(fileFromServerPath);
                 XSSFWorkbook wb = new XSSFWorkbook(inputStream);
                 ReadSecondPageFromServerFile(wb);
                 int group = 0;
@@ -482,10 +482,10 @@ public class XlsxFileHandler {
                     if (filePath.getAbsolutePath().matches(".+\\.xls")) {
                         xlsFileHandler = new XlsFileHandler();
                         if (xlsFileHandler.setWorkWithWaterFileFromXlsx(arrayForWater)) {
-                            errors.add(ftpController.getResult().toString());
+                            errors.add(ftpConnector.getResult().toString());
                             return true;
                         } else {
-                            errors.add(ftpController.getResult().toString());
+                            errors.add(ftpConnector.getResult().toString());
                             return false;
                         }
                     } //чтение данных из файла с компьютера в массив
@@ -505,7 +505,7 @@ public class XlsxFileHandler {
                 return false;
             }
         } catch (IOException e) {
-            errors.add(ftpController.getResult().toString());
+            errors.add(ftpConnector.getResult().toString());
             logger.log(LogCategory.ERROR, "IOException. Couldn't parse server water file");
             return false;
         }
@@ -678,9 +678,9 @@ public class XlsxFileHandler {
         wb.write(fileOut);
         fileOut.close();
         File fileForSend = new File(serverFileName);
-        ftpController.sendFile(new FileInputStream(fileForSend), serverFileName);
+        ftpConnector.sendFile(new FileInputStream(fileForSend), serverFileName);
         fileForSend.delete();
-        errors.add(ftpController.getResult().toString());
+        errors.add(ftpConnector.getResult().toString());
     }
 
     //создание файла по воде
@@ -803,9 +803,9 @@ public class XlsxFileHandler {
         wb.write(fileOut);
         fileOut.close();
         File fileForSend = new File(serverFileName);
-        ftpController.sendFile(new FileInputStream(fileForSend), serverFilePath);
+        ftpConnector.sendFile(new FileInputStream(fileForSend), serverFilePath);
         fileForSend.delete();
-        errors.add(ftpController.getResult().toString());
+        errors.add(ftpConnector.getResult().toString());
     }
 
     //создание второй страницы с добавленными регионами

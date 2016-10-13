@@ -1,4 +1,4 @@
-package server;
+package server.connector.lock;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -6,7 +6,7 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public class LockFile implements Comparable<LockFile> {
-    public static final String LOCK_FILE_TYPE = ".lock";
+    public static final String LOCK_FILE_TYPE = ".lockObject";
     private String serverFileName;
     private int lockClientIndex;
 
