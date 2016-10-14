@@ -2,10 +2,8 @@ package file.handling.util;
 
 import common.DataFileType;
 import lombok.val;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.*;
+import server.connector.ftp.FTPConnector;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -26,7 +24,19 @@ public class RegionsUtils {
         return region;
     }
 
-    public static  List<Integer> readRegionsFromSecondPage(Workbook workbook) {
+    public static List<Integer> getRegions(String serverFileName) {
+        val ftpConnector = new FTPConnector();
+        val inputStream = ftpConnector.getInputFileStream(serverFileName);
+        Workbook workbook;
+        try {
+            workbook = WorkbookFactory.create(inputStream);
+        } catch (Exception e) {
+            return null;
+        }
+        return readRegionsFromSecondPage(workbook);
+    }
+
+    public static List<Integer> readRegionsFromSecondPage(Workbook workbook) {
         val existedRegions = EMPTY_REGIONS;
         List<Integer> regions = new ArrayList<>();
         val secondPage = workbook.getSheetAt(1);
@@ -49,7 +59,6 @@ public class RegionsUtils {
         return regions;
     }
 
-
     public static void createRegionsPageInServerFile(Workbook workbook, boolean[] existedRegions) {
         Sheet sheet = workbook.createSheet("м.р, г.о");
         for (int i = 0; i < 14; i++) {
@@ -67,4 +76,5 @@ public class RegionsUtils {
             }
         }
     }
+
 }

@@ -27,7 +27,7 @@ public abstract class BaseServerFileRegionDeleter {
         }
         if (serverFileParseResult.isClientRegionAlreadyExistInServerFile()) {
             return ErrorInfo.builder()
-                    .errorType(ErrorType.CLIENT_REGION_ALREADY_IN_SERVER_fICE)
+                    .errorType(ErrorType.CLIENT_REGION_ALREADY_IN_SERVER_FILE)
                     .build();
         }
         return ErrorInfo.builder()

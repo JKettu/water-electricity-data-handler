@@ -1,19 +1,19 @@
 package gui.controller;
 
 import com.sun.javafx.collections.ObservableListWrapper;
-import common.DataType;
-import common.ServerFilesUtils;
 import common.logger.LogCategory;
 import common.logger.Logger;
-import gui.window.DeleteRegionFromServerFileWindow;
-import file.handling.XlsFileHandler;
+import file.handling.handler.FileHandler;
 import file.handling.util.HandlingType;
+import file.handling.util.RegionsUtils;
+import gui.window.DeleteRegionFromServerFileWindow;
 import javafx.beans.value.ObservableValue;
 import javafx.concurrent.Task;
 import javafx.scene.input.MouseEvent;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.val;
+import server.connector.ftp.FTPConnector;
 
 import java.util.List;
 
@@ -61,17 +61,13 @@ public class DeleteRegionFromServerFileWindowController extends BaseWindowContro
         val task = new Task<Void>() {
             @Override
             protected Void call() throws Exception {
-                val serverFileName = mainWindowController.getServerFileName();
-                val xlsFileHandler = new XlsFileHandler(selectedRegion,
-                        serverFileName);
-                val fileType = xlsFileHandler.getHeadlineFromServerFile(serverFileName);
-                if (fileType == null) {
-                    xlsFileHandler.getErrorsArray().add("FAILED_REGION_DELETION");
-                } else if (fileType.equals(DataType.WATER)) {
-                    xlsFileHandler.processWaterFileHandling(HandlingType.DELETE_REGION);
-                } else if (fileType.equals(DataType.ELECTRICITY)) {
-                    xlsFileHandler.processElectricityFileHandling(HandlingType.DELETE_REGION);
-                }
+                val fileHandler = FileHandler.builder()
+                        .dataType(mainWindowController.getSelectedDataType())
+                        .localFile(mainWindowController.getLoadedFile())
+                        .serverFileName(mainWindowController.getSelectedServerFileName())
+                        .dataFileType(mainWindowController.getDataFileType())
+                        .build();
+                fileHandler.processFileHandling(HandlingType.DELETE_REGION);
                 return null;
             }
         };
@@ -100,11 +96,10 @@ public class DeleteRegionFromServerFileWindowController extends BaseWindowContro
         val task = new Task<Void>() {
             @Override
             protected Void call() throws Exception {
-                String serverFileName = mainWindowController.getServerFileName();
-                val logger = Logger.getLogger(ServerFilesUtils.class.toString(), "getRegions");
+                val serverFileName = mainWindowController.getSelectedServerFileName();
+                val logger = Logger.getLogger(getClass().toString(), "processRegionsComboBoxClick");
                 logger.log(LogCategory.INFO, "Getting regions from file = '" + serverFileName + "'");
-                val xlsFileHandler = new XlsFileHandler(serverFileName);
-                loadedRegions = xlsFileHandler.getServerFileRegions();
+                loadedRegions = RegionsUtils.getRegions(serverFileName);
                 return null;
             }
         };
