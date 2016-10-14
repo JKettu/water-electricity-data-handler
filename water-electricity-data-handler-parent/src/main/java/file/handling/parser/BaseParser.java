@@ -11,6 +11,7 @@ import lombok.Getter;
 import lombok.val;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
 import server.connector.ftp.FTPConnector;
@@ -78,12 +79,20 @@ public abstract class BaseParser<DataModelType extends BaseDataModel> {
 
     protected abstract void parseLocalFileCell(int region, Row row, Cell cell);
 
+    protected void addGroupAndAddressToModel(int group, Cell cell, BaseDataModel model) {
+        if (cell.getCellTypeEnum().equals(CellType.STRING)) {
+            model.setAddress(cell.getRichStringCellValue().getString());
+            model.setGroup(group);
+        }
+    }
 
-    private void parseDataFromLocalFile(File dataFile) throws IOException, InvalidFormatException {
+    private void parseDataFromLocalFile(File dataFile)
+    throws IOException, InvalidFormatException {
         val region = RegionsUtils.getFileRegion(dataFile, dataFileType);
         val woorkbook = WorkbookFactory.create(dataFile);
         val firstSheet = woorkbook.getSheetAt(0); //номер листа в файле
         firstSheet.forEach(row -> parseLocalFileRow(region, row));
+        woorkbook.close();
     }
 
     private void parseDataFromServerFile(String serverFileName, File localFile)
@@ -108,9 +117,9 @@ public abstract class BaseParser<DataModelType extends BaseDataModel> {
         if (!checkHeadsOfFiles) {
             throw new FileHeadlinesNotEquals();
         }
-        RegionsUtils.readRegionsFromSecondPage(serverFileWorkbook);
-        logger.log(LogCategory.INFO, "Parsing server water file");
-        serverFileFirstSheet.forEach(row -> parseServerFileRow(row));
+        logger.log(LogCategory.INFO, "Parsing server water file: " + serverFileName);
+        serverFileFirstSheet.forEach(this::parseServerFileRow);
+        serverFileWorkbook.close();
     }
 
     private boolean checkEqualityOfHeadlines(String serverFileFirstLine, String localFileFirstLine) {
@@ -144,5 +153,6 @@ public abstract class BaseParser<DataModelType extends BaseDataModel> {
     private void parseServerFileRow(Row row) {
         row.forEach(cell -> parseServerFileCell(row, cell));
     }
+
 
 }

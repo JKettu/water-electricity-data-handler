@@ -2,7 +2,6 @@ package file.handling.parser;
 
 import common.logger.LogCategory;
 import common.logger.Logger;
-import file.handling.model.BaseDataModel;
 import file.handling.model.ElectricityDataModel;
 import file.handling.parser.exception.CellParseException;
 import lombok.Getter;
@@ -26,6 +25,8 @@ public class ElectricityDataParser extends BaseParser<ElectricityDataModel> {
     @Getter
     private String secondDate;
 
+    private int group;
+
     @Override
     protected void parseServerFileCell(Row row, Cell cell) {
         val rowNum = row.getRowNum();
@@ -38,7 +39,6 @@ public class ElectricityDataParser extends BaseParser<ElectricityDataModel> {
                     Integer.valueOf(arr[i]) * ((int) Math.pow(10, arr.length - i - 1));
         }
 
-        //чтение данных
         if (stringNumber > 5) {
             val electricityDataModel = parseElectricityDataModelForServerFile(cell, cellRef);
             if (electricityDataModel != null) {
@@ -83,13 +83,10 @@ public class ElectricityDataParser extends BaseParser<ElectricityDataModel> {
         logger.log(LogCategory.DEBUG,
                 "Parsing server xls electricity file. Cell address = '" + cellCode + "'");
         try {
-            int group = 0;
             if (cellRef.formatAsString().matches("A.+")) {
-                if (cell.getCellType() == 1) {
-                    if (cell.getRichStringCellValue().getString().matches("\\d\\..+")) {
-                        group = Character.getNumericValue(
-                                cell.getRichStringCellValue().getString().charAt(0));
-                    }
+                if (cell.getCellType() == 1 &&
+                        cell.getRichStringCellValue().getString().matches("\\d\\..+")) {
+                    group = Character.getNumericValue(cell.getRichStringCellValue().getString().charAt(0));
                 }
             } else if (cellRef.formatAsString().matches("B.+")) {
                 addGroupAndAddressToModel(group, cell, electricityDataModel);
@@ -402,13 +399,6 @@ public class ElectricityDataParser extends BaseParser<ElectricityDataModel> {
                     electricityDataModel.setRegion((int) cell.getNumericCellValue());
                 }
                 break;
-        }
-    }
-
-    private void addGroupAndAddressToModel(int group, Cell cell, BaseDataModel model) {
-        if (cell.getCellTypeEnum().equals(CellType.STRING)) {
-            model.setAddress(cell.getRichStringCellValue().getString());
-            model.setGroup(group);
         }
     }
 }
