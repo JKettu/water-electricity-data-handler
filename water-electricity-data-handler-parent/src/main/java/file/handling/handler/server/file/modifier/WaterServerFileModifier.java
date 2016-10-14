@@ -4,28 +4,31 @@ import common.error.info.ErrorInfo;
 import common.error.info.ErrorType;
 import common.error.info.WorkbookErrorInfo;
 import common.logger.Logger;
+import file.handling.handler.server.file.formator.WaterServerFileFormatter;
 import file.handling.parser.WaterDataParser;
-import file.handling.util.RegionsUtils;
 import lombok.val;
 
 public class WaterServerFileModifier extends BaseServerFileModifier {
     @Override
     public ErrorInfo modifyServerFile() {
         val logger = Logger.getLogger(WaterServerFileModifier.class.toString(), "modifyServerFile");
-        val regions = RegionsUtils.readRegionsFromSecondPage()
-        val serverFileParser = new WaterDataParser();
-        val serverFileParseResult = serverFileParser.parseServerFile(serverFileName, localFile);
+        val parser = new WaterDataParser();
+        val serverFileParseResult = parser.parseServerFile(serverFileName, localFile);
         if (!serverFileParseResult.isParsedSuccessfully()) {
-            if (serverFileParseResult.isClientHeadlineNotEqualsToServer()) {
-                return ErrorInfo.builder()
-                        .errorType(ErrorType.SERVER_FILE_AND_LOCAL_FILE_STRUCTURE_NOT_EQUALS)
-                        .build();
-            }
+            return createErrorInfo(serverFileParseResult);
+        }
+        val serverFileData = parser.getData();
+        val clientFileParseResult = parser.parseClientLocalFile(localFile, dataFileType);
+        if (!clientFileParseResult.isParsedSuccessfully()) {
             return ErrorInfo.builder()
-                    .errorType(ErrorType.WORKBOOK_SERVER_FILE_READING_ERROR)
-                    .workbookErrorInfo(new WorkbookErrorInfo(serverFileParseResult.getCellCode()))
+                    .errorType(ErrorType.WORKBOOK_LOCAL_FILE_READING_ERROR)
+                    .workbookErrorInfo(new WorkbookErrorInfo(clientFileParseResult.getErrorCellCode()))
                     .build();
         }
-        val data = serverFileParser.getData();
+        val clientFileData = parser.getData();
+        serverFileData.addAll(clientFileData);
+        val waterServerFileFormatter = new WaterServerFileFormatter(serverFileData, parser.getPeriod());
+        val serverFileDataStream = waterServerFileFormatter.format();
+        return writeServerFileDataToServer(serverFileDataStream);
     }
 }

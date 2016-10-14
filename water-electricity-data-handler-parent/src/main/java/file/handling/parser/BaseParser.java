@@ -6,6 +6,7 @@ import common.logger.Logger;
 import file.handling.model.BaseDataModel;
 import file.handling.parser.exception.CellParseException;
 import file.handling.parser.exception.FileHeadlinesNotEquals;
+import file.handling.parser.exception.RegionDataAlreadyExistException;
 import file.handling.util.RegionsUtils;
 import lombok.Getter;
 import lombok.val;
@@ -33,6 +34,7 @@ public abstract class BaseParser<DataModelType extends BaseDataModel> {
     }
 
     public LocalFileParseResult parseClientLocalFile(File dataFile, DataFileType dataFileType) {
+        data.clear();
         this.dataFileType = dataFileType;
         val logger = Logger.getLogger(getClass().toString(), "parse");
         try {
@@ -49,27 +51,31 @@ public abstract class BaseParser<DataModelType extends BaseDataModel> {
     }
 
     public ServerFileParseResult parseServerFile(String serverFileName, File localFile) {
+        data.clear();
         val logger = Logger.getLogger(getClass().toString(), "parse");
         try {
-            parseDataFromServerFile(serverFileName, localFile);
+            val regions = parseDataFromServerFile(serverFileName, localFile);
             return ServerFileParseResult.builder().parsedSuccessfully(true)
                     .clientHeadlineNotEqualsToServer(true)
+                    .serverFileRegions(regions)
+                    .build();
+        } catch (FileHeadlinesNotEquals e) {
+            return ServerFileParseResult.builder().parsedSuccessfully(false)
+                    .clientHeadlineNotEqualsToServer(true)
+                    .build();
+        } catch (RegionDataAlreadyExistException e) {
+            return ServerFileParseResult.builder().parsedSuccessfully(false)
+                    .clientRegionAlreadyExistInServerFile(true)
                     .build();
         } catch (CellParseException cpe) {
             val cellCode = cpe.getCellCode();
             logger.log(LogCategory.ERROR, "Error during parsing cell '" + cellCode + "'");
             return ServerFileParseResult.builder().parsedSuccessfully(false)
-                    .clientHeadlineNotEqualsToServer(true)
-                    .cellCode(cellCode)
-                    .build();
-        } catch (FileHeadlinesNotEquals e) {
-            return ServerFileParseResult.builder().parsedSuccessfully(false)
-                    .clientHeadlineNotEqualsToServer(false)
+                    .errorCellCode(cellCode)
                     .build();
         } catch (Exception e) {
             logger.log(LogCategory.ERROR, "Error during parsing file '" + serverFileName + "': " + e);
             return ServerFileParseResult.builder().parsedSuccessfully(false)
-                    .clientHeadlineNotEqualsToServer(false)
                     .build();
         }
     }
@@ -79,7 +85,8 @@ public abstract class BaseParser<DataModelType extends BaseDataModel> {
 
     protected abstract void parseLocalFileCell(int region, Row row, Cell cell);
 
-    protected void addGroupAndAddressToModel(int group, Cell cell, BaseDataModel model) {
+
+    void addGroupAndAddressToModel(int group, Cell cell, BaseDataModel model) {
         if (cell.getCellTypeEnum().equals(CellType.STRING)) {
             model.setAddress(cell.getRichStringCellValue().getString());
             model.setGroup(group);
@@ -95,7 +102,7 @@ public abstract class BaseParser<DataModelType extends BaseDataModel> {
         woorkbook.close();
     }
 
-    private void parseDataFromServerFile(String serverFileName, File localFile)
+    private List<Integer> parseDataFromServerFile(String serverFileName, File localFile)
     throws IOException, InvalidFormatException, FileHeadlinesNotEquals {
         val logger = Logger.getLogger(getClass().getName(), "parseDataFromServerFile");
         val ftpConnector = new FTPConnector();
@@ -118,8 +125,14 @@ public abstract class BaseParser<DataModelType extends BaseDataModel> {
             throw new FileHeadlinesNotEquals();
         }
         logger.log(LogCategory.INFO, "Parsing server water file: " + serverFileName);
+        val serverFileRegions = RegionsUtils.readRegionsFromSecondPage(serverFileWorkbook);
+        val localFileRegion = RegionsUtils.getFileRegion(localFile, dataFileType);
+        if (serverFileRegions.contains(localFileRegion)) {
+            throw new RegionDataAlreadyExistException();
+        }
         serverFileFirstSheet.forEach(this::parseServerFileRow);
         serverFileWorkbook.close();
+        return serverFileRegions;
     }
 
     private boolean checkEqualityOfHeadlines(String serverFileFirstLine, String localFileFirstLine) {

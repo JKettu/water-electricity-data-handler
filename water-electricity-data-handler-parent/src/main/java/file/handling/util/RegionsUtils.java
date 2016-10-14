@@ -26,8 +26,7 @@ public class RegionsUtils {
         return region;
     }
 
-    public static  List<Integer> readServerFileRegions(String serverFileName) {
-        val inputStream = ftp
+    public static  List<Integer> readRegionsFromSecondPage(Workbook workbook) {
         val existedRegions = EMPTY_REGIONS;
         List<Integer> regions = new ArrayList<>();
         val secondPage = workbook.getSheetAt(1);
@@ -49,6 +48,7 @@ public class RegionsUtils {
         }
         return regions;
     }
+
 
     public static void createRegionsPageInServerFile(Workbook workbook, boolean[] existedRegions) {
         Sheet sheet = workbook.createSheet("м.р, г.о");
