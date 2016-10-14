@@ -2,20 +2,22 @@ package gui.controller;
 
 import common.CommonUtils;
 import common.ConnectionFailedException;
+import common.DataFileType;
 import common.DataType;
 import common.logger.LogCategory;
 import common.logger.Logger;
-import gui.controller.common.CommonControllerMethods;
+import file.handling.XlsFileHandler;
+import file.handling.XlsxFileHandler;
+import file.handling.handler.FileHandler;
+import file.handling.util.HandlingType;
 import gui.common.GuiConstants;
 import gui.common.WindowsFactory;
+import gui.controller.common.CommonControllerMethods;
 import gui.window.DeleteRegionFromServerFileWindow;
 import gui.window.ErrorWindow;
 import gui.window.NewServerFileNameInputWindow;
 import gui.window.SuccessWindow;
 import gui.window.main.MainWindow;
-import file.handling.XlsFileHandler;
-import file.handling.XlsxFileHandler;
-import file.handling.util.HandlingType;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.scene.input.MouseEvent;
@@ -60,6 +62,7 @@ public class MainWindowController extends BaseWindowController<MainWindow> {
 
     @Setter
     private DataType selectedDataType = DataType.WATER;
+    private DataFileType dataFileType;
 
     public MainWindowController() {
         xlsxFileHandler = new XlsxFileHandler();
@@ -408,7 +411,13 @@ public class MainWindowController extends BaseWindowController<MainWindow> {
                 Logger logger =
                         Logger.getLogger(MainWindowController.class.toString(), "processSendFileButtonClick");
                 try {
-                    readServerFile();
+                    val fileHandler = FileHandler.builder()
+                            .dataFileType(dataFileType)
+                            .dataType(selectedDataType)
+                            .localFile(loadedFile)
+                            .serverFileName(selectedServerFileName)
+                            .build();
+                    fileHandler.processFileHandling(HandlingType.CREATE);
                 } catch (Exception e) {
                     logger.log(LogCategory.ERROR, "Ошибка обработки файлов: " + e);
                     LockFileMonitor.getLockMonitor().forceDeleteLocks();

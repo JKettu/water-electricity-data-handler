@@ -1,0 +1,9 @@
+package common.error.info;
+
+public enum ErrorType {
+    FTP_ERROR,
+    WORKBOOK_LOCAL_FILE_READING_ERROR,
+    WORKBOOK_SERVER_FILE_WRITING_ERROR,
+    LOCK_ERROR,
+    LOCAL_FILE_READ_ERROR
+}
