@@ -11,10 +11,12 @@ import lombok.val;
 import static gui.common.GuiCommonLib.createNewLineLabel;
 
 @Getter
-class LoadFileWidget extends VBox {
+public class LoadFileWidget extends VBox {
     private static final String LOAD_FILE_BUTTON_TEXT = "Загрузить файл с данными";
 
     private Label loadFileInfoTextLabel;
+
+    @Getter
     private Button loadFileButton;
 
     LoadFileWidget() {

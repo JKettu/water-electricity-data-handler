@@ -1,8 +1,7 @@
 package gui.window;
 
-import gui.controller.DeleteRegionFromServerFileWindowController;
 import gui.common.GuiConstants;
-import gui.window.main.MainWindow;
+import gui.controller.DeleteRegionFromServerFileWindowController;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -140,7 +139,7 @@ public class DeleteRegionFromServerFileWindow extends BaseWindow<DeleteRegionFro
         val screenHeight = screenSize.height;
 
         scene = new Scene(rootBox, screenWidth / 3, screenHeight / 3);
-        val styleResource = MainWindow.class.getResource(GuiConstants.WINDOW_STYLE_CSS_RESOURCE_PATH);
+        val styleResource = DeleteRegionFromServerFileWindow.class.getResource(GuiConstants.WINDOW_STYLE_CSS_RESOURCE_PATH);
         scene.setUserAgentStylesheet(styleResource.toExternalForm());
     }
 

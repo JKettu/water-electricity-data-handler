@@ -8,6 +8,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
+import javafx.scene.control.RadioButton;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import lombok.Getter;
@@ -39,6 +40,9 @@ public class MainWindow extends BaseWindow<MainWindowController> {
     @Getter
     private MainWindowRightBlock rightBlock;
 
+    @Getter
+    private VBox rootBox;
+
     private static final String SEND_FILE_BUTTON_TEXT = "Отправить";
     private static final String DELETE_REGION_BUTTON_TEXT = "Удалить регион из файла";
     private static final String EXIT_BUTTON_TEXT = "Выход";
@@ -46,7 +50,6 @@ public class MainWindow extends BaseWindow<MainWindowController> {
     private HBox mainBox;
     private HBox exitButtonBox;
     private VBox currentTaskInfoTextBox;
-    private VBox rootBox;
     private Label currentTaskInfoTextLabel;
     private VBox progressBarBox;
 
@@ -107,8 +110,19 @@ public class MainWindow extends BaseWindow<MainWindowController> {
         sendFileButton.setOnMouseClicked(controller::processSendFileButtonClick);
         exitButton.setOnMouseClicked(controller::processExitButtonClick);
         deleteRegionButton.setOnMouseClicked(controller::processDeleteRegionButtonClick);
+        leftBlock.getLoadFileWidget().getLoadFileButton().setOnMouseClicked(controller::processLoadButtonClick);
+        getElectricityRadioButton().setOnMouseClicked(controller::processElectricityRadioButtonClick);
+        getWaterRadioButton().setOnMouseClicked(controller::processWaterRadioButtonClick);
     }
 
+
+    public RadioButton getElectricityRadioButton() {
+        return leftBlock.getElectricityRadioButton();
+    }
+
+    public RadioButton getWaterRadioButton() {
+        return leftBlock.getWaterRadioButton();
+    }
 
     @Override
     protected void buildWindow() {

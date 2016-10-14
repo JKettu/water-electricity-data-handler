@@ -9,15 +9,17 @@ import java.util.Properties;
 public class ConfigProperties {
     private static final String CONFIG_FTP_PROPERTY_FILE_NAME = "/ftp.properties";
     private static ConfigProperties instance;
-    private InputStreamReader configFileReader;
+    private Properties properties;
 
 
+    @SneakyThrows
     private ConfigProperties(ConfigPropertiesSections configPropertiesSections) {
         switch (configPropertiesSections) {
             case FTP:
-                configFileReader =
-                        new InputStreamReader(
-                                ConfigProperties.class.getResourceAsStream(CONFIG_FTP_PROPERTY_FILE_NAME));
+                val configFileReader =
+                        new InputStreamReader(ConfigProperties.class.getResourceAsStream(CONFIG_FTP_PROPERTY_FILE_NAME));
+                properties = new Properties();
+                properties.load(configFileReader);
                 break;
         }
     }
@@ -29,10 +31,7 @@ public class ConfigProperties {
         return instance;
     }
 
-    @SneakyThrows
     public String getPropertyValue(String propertyName) {
-        val properties = new Properties();
-        properties.load(configFileReader);
         return properties.getProperty(propertyName);
     }
 

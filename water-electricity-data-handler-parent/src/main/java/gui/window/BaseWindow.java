@@ -12,6 +12,7 @@ public abstract class BaseWindow<ControllerType extends BaseWindowController> {
     }
 
     public void bindController(ControllerType controller) {
+        controller.setWindow(this);
         this.controller = controller;
     }
 

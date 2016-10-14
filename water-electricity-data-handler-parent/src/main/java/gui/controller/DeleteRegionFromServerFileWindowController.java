@@ -13,7 +13,6 @@ import javafx.scene.input.MouseEvent;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.val;
-import server.connector.ftp.FTPConnector;
 
 import java.util.List;
 
@@ -63,9 +62,8 @@ public class DeleteRegionFromServerFileWindowController extends BaseWindowContro
             protected Void call() throws Exception {
                 val fileHandler = FileHandler.builder()
                         .dataType(mainWindowController.getSelectedDataType())
-                        .localFile(mainWindowController.getLoadedFile())
                         .serverFileName(mainWindowController.getSelectedServerFileName())
-                        .dataFileType(mainWindowController.getDataFileType())
+                        .regionToDelete(selectedRegion)
                         .build();
                 fileHandler.processFileHandling(HandlingType.DELETE_REGION);
                 return null;

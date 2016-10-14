@@ -6,6 +6,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import lombok.Getter;
 
 import static gui.common.GuiCommonLib.createNewLineLabel;
 
@@ -17,9 +18,11 @@ public class SuccessWindow extends BaseWindow<SuccessWindowController> {
     private static final String LOAD_NEW_FILE_TEXT = "Загрузить новый файл";
     private static final String EXIT_TEXT = "Выход";
 
+    @Getter
+    private VBox rootBox;
+
     private HBox labelBox;
     private HBox buttonsBox;
-    private VBox rootBox;
     private Button againButton;
     private Button exitButton;
     private Label label;

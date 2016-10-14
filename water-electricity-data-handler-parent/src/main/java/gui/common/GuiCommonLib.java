@@ -1,7 +1,6 @@
 package gui.common;
 
 
-import gui.window.main.MainWindow;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Parent;
@@ -55,8 +54,8 @@ public class GuiCommonLib {
         val screenWidth = screenSize.getWidth();
         val screenHeight = screenSize.getHeight();
         val scene = new Scene(rootBox, screenWidth / 2, screenHeight / 2);
-        val styleResource = MainWindow.class.getResource(GuiConstants.WINDOW_STYLE_CSS_RESOURCE_PATH);
-        scene.setUserAgentStylesheet(styleResource.toExternalForm());
+        val styleResource = GuiCommonLib.class.getResource(GuiConstants.WINDOW_STYLE_CSS_RESOURCE_PATH);
+        scene.getStylesheets().addAll(styleResource.toExternalForm());
         return scene;
     }
 }

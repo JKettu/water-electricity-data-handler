@@ -7,6 +7,7 @@ import common.logger.LogCategory;
 import common.logger.Logger;
 import file.handling.handler.FileHandler;
 import file.handling.util.HandlingType;
+import gui.ExcelFileChooser;
 import gui.common.GuiConstants;
 import gui.common.WindowsFactory;
 import gui.controller.common.CommonControllerMethods;
@@ -26,6 +27,7 @@ import server.connector.ftp.FTPErrorCode;
 import server.connector.lock.LockFileMonitor;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 
 import static common.CommonUtils.isNullOrEmpty;
@@ -47,6 +49,11 @@ public class MainWindowController extends BaseWindowController<MainWindow> {
     private static final String SELECTED_FILE_NOT_FOUND_TEXT = "Файл с указанным именем не был найден";
     private static final String FILE_HANDLING_ERROR = "Ошибка обработки файлов";
     private static final String FILE_IS_SENDING = "Файл отправляется...";
+    private static final String OPEN_FILE_TEXT = "Открыть файл";
+    private static final String FILE_WAS_LOADED_TEXT = "Файл загружен";
+    private static final String WRONG_FILE_FORMAT_OR_NAME_TEXT = "Неверный формат или имя файла";
+    private static final String WATER_PATTERN = "[В|в]одоснабжение.+";
+    private static final String ELECTRICITY_PATTERN = "[Э|э]лектроснабжение.+";
 
     @Getter
     private List<String> serverFileNames;
@@ -71,8 +78,8 @@ public class MainWindowController extends BaseWindowController<MainWindow> {
     private boolean loadedFileReadyForSend;
 
     public MainWindowController() {
+        serverFileNames = new ArrayList<>();
         serverFileNames.add(GuiConstants.NEW_SERVER_FILE_GUI_TEXT);
-        window.setServerFileNames(serverFileNames);
     }
 
 
@@ -122,7 +129,7 @@ public class MainWindowController extends BaseWindowController<MainWindow> {
     }
 
     public void processSendFileButtonClick(MouseEvent clickEvent) {
-        if (!isNullOrEmpty(selectedServerFileName)) {
+        if (isNullOrEmpty(selectedServerFileName)) {
             window.setCurrentTaskInfoText(SELECT_FILE_FOR_UPLOADING_TEXT);
             return;
         }
@@ -180,20 +187,59 @@ public class MainWindowController extends BaseWindowController<MainWindow> {
         disableWindowElements();
     }
 
+    public void processLoadButtonClick(MouseEvent mouseEvent) {
+        val excelFileChooser = new ExcelFileChooser();
+        int result = excelFileChooser.showDialog(null, OPEN_FILE_TEXT);
+        if (result == ExcelFileChooser.APPROVE_OPTION) {
+
+            loadedFile = excelFileChooser.getSelectedFile();
+            val loadedFilePath = loadedFile.getAbsolutePath();
+            val loadedFileName = loadedFile.getName();
+
+            if (clientFileWasLoadedCorrectly(loadedFilePath, loadedFileName)) {
+                window.setLoadFileInfoText(FILE_WAS_LOADED_TEXT);
+                window.setCurrentTaskInfoText("");
+                loadedFileReadyForSend = true;
+            } else {
+                window.setLoadFileInfoText(WRONG_FILE_FORMAT_OR_NAME_TEXT);
+                loadedFileReadyForSend = false;
+            }
+
+        }
+    }
+
+    public void processWaterRadioButtonClick(MouseEvent mouseEvent) {
+        val electricityButton = window.getElectricityRadioButton();
+        electricityButton.setSelected(false);
+        val waterButton = window.getWaterRadioButton();
+        waterButton.setSelected(true);
+        selectedDataType = DataType.WATER;
+    }
+
+    public void processElectricityRadioButtonClick(MouseEvent mouseEvent) {
+        val waterButton = window.getWaterRadioButton();
+        waterButton.setSelected(false);
+        val electricityButton = window.getElectricityRadioButton();
+        electricityButton.setSelected(true);
+        selectedDataType = DataType.ELECTRICITY;
+    }
 
     public void disableWindowElements() {
-        window.getSendFileAndDeleteRegionButtonsBox().setDisable(true);
-        window.getExitButton().setDisable(true);
-        window.getLeftBlock().setDisable(true);
-        window.getRightBlock().setDisable(true);
+        window.getSendFileButton().setDisable(true);
+        window.getDeleteRegionButton().setDisable(true);
+        window.getLeftBlock().getElectricityRadioButton().setDisable(true);
+        window.getLeftBlock().getWaterRadioButton().setDisable(true);
+        window.getLeftBlock().getLoadFileWidget().getLoadFileButton().setDisable(true);
+        window.getRightBlock().getServerFilesBox().setDisable(true);
     }
 
     public void enableWindowElements() {
         window.getSendFileButton().setDisable(false);
-        window.getExitButton().setDisable(false);
-        window.getLeftBlock().setDisable(false);
-        window.getRightBlock().setDisable(false);
-        if (CommonUtils.isNullOrEmpty(selectedServerFileName) &&
+        window.getLeftBlock().getElectricityRadioButton().setDisable(false);
+        window.getLeftBlock().getWaterRadioButton().setDisable(false);
+        window.getLeftBlock().getLoadFileWidget().getLoadFileButton().setDisable(false);
+        window.getRightBlock().getServerFilesBox().setDisable(false);
+        if (!CommonUtils.isNullOrEmpty(selectedServerFileName) &&
                 !selectedServerFileName.equals(GuiConstants.NEW_SERVER_FILE_GUI_TEXT)) {
             window.getDeleteRegionButton().setDisable(false);
         }
@@ -201,18 +247,25 @@ public class MainWindowController extends BaseWindowController<MainWindow> {
 
 
     void showSuccessWindow(String text) {
-        window.clearWindow();
         val successWindowController = WindowsFactory.createWindow(SuccessWindow.class, SuccessWindowController.class);
         successWindowController.setMainWindowController(this);
         successWindowController.setSuccessText(text);
         successWindowController.showWindow();
+        val successWindowRootBox = successWindowController.getWindow().getRootBox();
+        val windowChildren = window.getRootBox().getChildren();
+        windowChildren.clear();
+        windowChildren.add(successWindowRootBox);
     }
 
     void showErrorWindow(String errorText) {
-        window.clearWindow();
         val errorWindowController = WindowsFactory.createWindow(ErrorWindow.class, ErrorWindowController.class);
+        errorWindowController.setMainWindowController(this);
         errorWindowController.setErrorText(errorText);
         errorWindowController.showWindow();
+        val errorWindowRootBox = errorWindowController.getWindow().getRootBox();
+        val windowChildren = window.getRootBox().getChildren();
+        windowChildren.clear();
+        windowChildren.add(errorWindowRootBox);
     }
 
     void updateWindow() {
@@ -241,6 +294,13 @@ public class MainWindowController extends BaseWindowController<MainWindow> {
     }
 
 
+    @Override
+    public void showWindow() {
+        super.showWindow();
+        window.setServerFileNames(serverFileNames);
+
+    }
+
     private void showLongTaskProcessingInfo(String info) {
         window.setCurrentTaskInfoText(info);
         window.showProgressBar();
@@ -253,8 +313,11 @@ public class MainWindowController extends BaseWindowController<MainWindow> {
 
     private void reloadServerFileNames() {
         val ftpController = new FTPConnector();
-        serverFileNames = ftpController.getServerFileNames();
         val ftpErrorCode = ftpController.getFtpErrorCode();
+        serverFileNames = ftpController.getServerFileNames();
+        if (ftpErrorCode == null) {
+            return;
+        }
         if (ftpErrorCode.equals(FTPErrorCode.CONNECTION_FAILED) || ftpErrorCode.equals(FTPErrorCode.LOGIN_FAILED)) {
             showErrorWindow(NETWORK_CONNECTION_ERROR_TEXT_LABEL);
         }
@@ -275,5 +338,11 @@ public class MainWindowController extends BaseWindowController<MainWindow> {
 
     private boolean isSelectedFileNameIsNewFile() {
         return selectedServerFileName.equals(GuiConstants.NEW_SERVER_FILE_GUI_TEXT);
+    }
+
+    private boolean clientFileWasLoadedCorrectly(String loadedFilePath, String loadedFileName) {
+        return ((loadedFilePath.matches(".+\\" + DataFileType.XLS.getFileType())) ||
+                (loadedFilePath.matches(".+\\" + DataFileType.XLS.getFileType()))) &&
+                ((loadedFileName.matches(WATER_PATTERN)) || (loadedFileName.matches(ELECTRICITY_PATTERN)));
     }
 }

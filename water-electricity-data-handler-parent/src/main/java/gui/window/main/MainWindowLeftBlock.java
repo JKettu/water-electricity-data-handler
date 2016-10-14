@@ -10,7 +10,6 @@ import static gui.common.GuiCommonLib.createNewLineLabel;
 
 @Getter
 public class MainWindowLeftBlock extends VBox {
-    private static final String RADIO_BUTTON_STYLE = ".radio";
     private static final String WATER_BUTTON_TEXT = "Вода";
     private static final String ELECTRICITY_BUTTON_TEXT = "Электричество";
     private static final String SELECT_RESOURCE_TEXT_LABEL = "Выберите ресурс:";
@@ -37,14 +36,13 @@ public class MainWindowLeftBlock extends VBox {
         waterRadioButton = new RadioButton(WATER_BUTTON_TEXT);
         waterRadioButton.setAlignment(Pos.BOTTOM_LEFT);
         waterRadioButton.setSelected(true);
-        waterRadioButton.setStyle(RADIO_BUTTON_STYLE);
     }
 
     private void createElectricityRadioButton() {
         electricityRadioButton = new RadioButton(ELECTRICITY_BUTTON_TEXT);
         electricityRadioButton.setAlignment(Pos.BOTTOM_LEFT);
         electricityRadioButton.setSelected(false);
-        electricityRadioButton.setStyle(RADIO_BUTTON_STYLE);
     }
+
 
 }

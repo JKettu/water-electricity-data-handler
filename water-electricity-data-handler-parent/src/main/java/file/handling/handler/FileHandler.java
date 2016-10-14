@@ -29,6 +29,7 @@ public class FileHandler {
     private File localFile;
     private DataFileType dataFileType;
     private DataType dataType;
+    private int regionToDelete;
 
     public ErrorInfo processFileHandling(HandlingType handlingType) {
         val logger = Logger.getLogger(getClass().toString(), "processWaterFileHandling");
@@ -72,11 +73,9 @@ public class FileHandler {
                         .modifyServerFile();
                 break;
             case DELETE_REGION:
-
                 result = new ServerFileRegionDeleterBuilder()
                         .setServerFileName(serverFileName)
-                        .setLocalFile(localFile)
-                        .setDataFileType(dataFileType)
+                        .setRegion(regionToDelete)
                         .build(dataType)
                         .deleteRegionFromServerFile();
                 break;

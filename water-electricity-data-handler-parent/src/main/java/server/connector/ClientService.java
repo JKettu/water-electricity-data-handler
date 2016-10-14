@@ -12,7 +12,7 @@ import java.util.List;
 public class ClientService {
 
     private static final String CLIENT_ID_FILE_NAME = "id.txt";
-    public static int CLIENT_ID = 1;
+    public static Integer CLIENT_ID = 1;
 
     public static void registerClient() {
         val ftpController = new FTPConnector();

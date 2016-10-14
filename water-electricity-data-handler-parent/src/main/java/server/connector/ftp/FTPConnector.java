@@ -1,12 +1,11 @@
 package server.connector.ftp;
 
 
+import common.TemporaryDeleteOnExitFiles;
 import common.config.ConfigProperties;
 import common.config.ConfigPropertiesSections;
-import common.TemporaryDeleteOnExitFiles;
 import common.logger.LogCategory;
 import common.logger.Logger;
-import lombok.Cleanup;
 import lombok.Getter;
 import lombok.val;
 import org.apache.commons.net.ftp.FTP;
@@ -67,7 +66,7 @@ public class FTPConnector {
             return null;
         }
         val serverFilePath = formatServerFilePath(serverFileName);
-        @Cleanup val outputStream = new ByteArrayOutputStream();
+        val outputStream = new ByteArrayOutputStream();
         InputStream inputStream = null;
         try {
             if (!ftpClient.retrieveFile(serverFilePath, outputStream)) {
@@ -78,7 +77,8 @@ public class FTPConnector {
                 logger.log(LogCategory.INFO,
                         "Successful retrieving. File = '" + serverFileName + "' was retrieved from server");
                 inputStream = new ByteArrayInputStream(outputStream.toByteArray());
-            }
+                outputStream.close();
+                }
         } catch (Exception e) {
             ftpErrorCode = FTPErrorCode.FILE_RETRIEVE_ERROR;
             logger.log(LogCategory.ERROR, "Error during getting stream of server file '" + serverFileName + "': " + e);

@@ -14,11 +14,6 @@ root {
     -fx-text-fill: white;
 }
 
-.radio {
-    -fx-text-color: #248F40;
-    -fx-font-size: 14px;
-}
-
 .label {
     -fx-font-size: 14px;
     -fx-font-weight: bold;

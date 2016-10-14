@@ -7,6 +7,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import lombok.Getter;
 
 import static gui.common.GuiCommonLib.createNewLineLabel;
 
@@ -14,7 +15,9 @@ public class ErrorWindow extends BaseWindow<ErrorWindowController> {
 
     private static final String EXIT_BUTTON_TEXT = "Выход";
 
+    @Getter
     private VBox rootBox;
+
     private Button exitButton;
     private Label errorTextLabel;
     private HBox buttonsBox;
