@@ -401,5 +401,6 @@ public class ElectricityDataParser extends BaseParser<ElectricityDataModel> {
                 break;
         }
     }
+
 }
 

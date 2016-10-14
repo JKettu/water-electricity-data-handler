@@ -6,9 +6,9 @@ import common.error.info.ErrorInfo;
 import common.error.info.ErrorType;
 import common.logger.LogCategory;
 import common.logger.Logger;
-import file.handling.handler.server.file.ServerFileModifier;
-import file.handling.handler.server.file.ServerFileRegionsDeleter;
 import file.handling.handler.server.file.creator.ServerFileCreatorBuilder;
+import file.handling.handler.server.file.deleter.ServerFileRegionDeleterBuilder;
+import file.handling.handler.server.file.modifier.ServerFileModifierBuilder;
 import file.handling.util.HandlingType;
 import lombok.Builder;
 import lombok.val;
@@ -64,12 +64,21 @@ public class FileHandler {
                         .createServerFile();
                 break;
             case MODIFY:
-                val serverFileModifier = new ServerFileModifier();
-                result = serverFileModifier.modifyServerFile();
+                result = new ServerFileModifierBuilder()
+                        .setServerFileName(serverFileName)
+                        .setLocalFile(localFile)
+                        .setDataFileType(dataFileType)
+                        .build(dataType)
+                        .modifyServerFile();
                 break;
             case DELETE_REGION:
-                val serverFileRegionsDeleter = new ServerFileRegionsDeleter();
-                result = serverFileRegionsDeleter.deleteServerFileRegion();
+
+                result = new ServerFileRegionDeleterBuilder()
+                        .setServerFileName(serverFileName)
+                        .setLocalFile(localFile)
+                        .setDataFileType(dataFileType)
+                        .build(dataType)
+                        .deleteRegionFromServerFile();
                 break;
         }
         lockFileController.deleteLock(lock);

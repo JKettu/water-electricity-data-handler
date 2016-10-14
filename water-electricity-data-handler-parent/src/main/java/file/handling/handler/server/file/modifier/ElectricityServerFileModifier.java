@@ -4,7 +4,7 @@ import common.error.info.ErrorInfo;
 import common.error.info.ErrorType;
 import common.error.info.WorkbookErrorInfo;
 import common.logger.Logger;
-import file.handling.handler.server.file.formator.ElectricityServerFileFormatter;
+import file.handling.handler.server.file.builder.ElectricityServerFileBuilder;
 import file.handling.parser.ElectricityDataParser;
 import lombok.val;
 
@@ -14,7 +14,7 @@ public class ElectricityServerFileModifier extends BaseServerFileModifier {
     public ErrorInfo modifyServerFile() {
         val logger = Logger.getLogger(WaterServerFileModifier.class.toString(), "modifyServerFile");
         val parser = new ElectricityDataParser();
-        val serverFileParseResult = parser.parseServerFile(serverFileName, localFile);
+        val serverFileParseResult = parser.parseServerFileWithHeadlinesCheck(serverFileName, localFile);
         if (!serverFileParseResult.isParsedSuccessfully()) {
             return createErrorInfo(serverFileParseResult);
         }
@@ -29,8 +29,8 @@ public class ElectricityServerFileModifier extends BaseServerFileModifier {
         val clientFileData = parser.getData();
         serverFileData.addAll(clientFileData);
         val waterServerFileFormatter =
-                new ElectricityServerFileFormatter(serverFileData, parser.getFirstDate(), parser.getSecondDate());
-        val serverFileDataStream = waterServerFileFormatter.format();
+                new ElectricityServerFileBuilder(serverFileData, parser.getFirstDate(), parser.getSecondDate());
+        val serverFileDataStream = waterServerFileFormatter.build();
         return writeServerFileDataToServer(serverFileDataStream);
     }
 

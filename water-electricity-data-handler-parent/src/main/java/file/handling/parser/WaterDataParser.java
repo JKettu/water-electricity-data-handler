@@ -9,6 +9,7 @@ import lombok.val;
 import org.apache.poi.hssf.util.CellReference;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.DateUtil;
 import org.apache.poi.ss.usermodel.Row;
 
 import java.math.BigDecimal;
@@ -308,5 +309,20 @@ public class WaterDataParser extends BaseParser<WaterDataModel> {
         }
     }
 
+    private void parseAddressWater(int group, Cell cell, WaterDataModel waterDataModel) {
+        switch (cell.getCellType()) {
+            case Cell.CELL_TYPE_STRING:
+                waterDataModel.setAddress(cell.getStringCellValue());
+                waterDataModel.setGroup(group);
+                break;
+            case Cell.CELL_TYPE_NUMERIC:
+                if (DateUtil.isCellDateFormatted(cell)) {
+                    waterDataModel.setAddress(null);
+                } else {
+                    waterDataModel.setAddress(null);
+                }
+                break;
+        }
+    }
 
 }

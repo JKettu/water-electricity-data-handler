@@ -1,4 +1,4 @@
-package file.handling.handler.server.file.formator;
+package file.handling.handler.server.file.builder;
 
 import common.DataType;
 import common.logger.LogCategory;
@@ -20,16 +20,16 @@ import java.util.List;
 
 import static file.handling.util.RegionsUtils.EMPTY_REGIONS;
 
-public class WaterServerFileFormatter extends BaseServerFileFormatter<WaterDataModel> {
+public class WaterServerFileBuilder extends BaseServerFileBuilder<WaterDataModel> {
     private String period;
 
-    public WaterServerFileFormatter(List<WaterDataModel> data, String period) {
+    public WaterServerFileBuilder(List<WaterDataModel> data, String period) {
         super(data);
         this.period = period;
     }
 
     @Override
-    public ByteArrayOutputStream format() {
+    public ByteArrayOutputStream build() {
         val logger = Logger.getLogger(getClass().getName(), "format");
         logger.log(LogCategory.DEBUG, "Creating server water file");
         val workbook = new HSSFWorkbook();

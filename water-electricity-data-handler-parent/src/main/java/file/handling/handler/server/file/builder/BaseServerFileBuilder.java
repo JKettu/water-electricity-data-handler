@@ -1,4 +1,4 @@
-package file.handling.handler.server.file.formator;
+package file.handling.handler.server.file.builder;
 
 import common.logger.LogCategory;
 import common.logger.Logger;
@@ -11,14 +11,14 @@ import org.apache.poi.ss.usermodel.Sheet;
 import java.io.ByteArrayOutputStream;
 import java.util.List;
 
-abstract class BaseServerFileFormatter <DataModelType extends BaseDataModel> {
-    protected List<DataModelType > data;
+abstract class BaseServerFileBuilder<DataModelType extends BaseDataModel> {
+    protected List<DataModelType> data;
 
-    BaseServerFileFormatter(List<DataModelType> data) {
+    BaseServerFileBuilder(List<DataModelType> data) {
         this.data = data;
     }
 
-    public abstract ByteArrayOutputStream format();
+    public abstract ByteArrayOutputStream build();
 
     //заполнение данных из массива в файл
     protected abstract void addDataToFile(Sheet sheet, CellStyle cellStyle);

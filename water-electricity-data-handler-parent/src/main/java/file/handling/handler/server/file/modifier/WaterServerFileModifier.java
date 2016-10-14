@@ -4,7 +4,7 @@ import common.error.info.ErrorInfo;
 import common.error.info.ErrorType;
 import common.error.info.WorkbookErrorInfo;
 import common.logger.Logger;
-import file.handling.handler.server.file.formator.WaterServerFileFormatter;
+import file.handling.handler.server.file.builder.WaterServerFileBuilder;
 import file.handling.parser.WaterDataParser;
 import lombok.val;
 
@@ -13,7 +13,7 @@ public class WaterServerFileModifier extends BaseServerFileModifier {
     public ErrorInfo modifyServerFile() {
         val logger = Logger.getLogger(WaterServerFileModifier.class.toString(), "modifyServerFile");
         val parser = new WaterDataParser();
-        val serverFileParseResult = parser.parseServerFile(serverFileName, localFile);
+        val serverFileParseResult = parser.parseServerFileWithHeadlinesCheck(serverFileName, localFile);
         if (!serverFileParseResult.isParsedSuccessfully()) {
             return createErrorInfo(serverFileParseResult);
         }
@@ -27,8 +27,8 @@ public class WaterServerFileModifier extends BaseServerFileModifier {
         }
         val clientFileData = parser.getData();
         serverFileData.addAll(clientFileData);
-        val waterServerFileFormatter = new WaterServerFileFormatter(serverFileData, parser.getPeriod());
-        val serverFileDataStream = waterServerFileFormatter.format();
+        val waterServerFileFormatter = new WaterServerFileBuilder(serverFileData, parser.getPeriod());
+        val serverFileDataStream = waterServerFileFormatter.build();
         return writeServerFileDataToServer(serverFileDataStream);
     }
 }

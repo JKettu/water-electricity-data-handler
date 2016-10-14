@@ -3,7 +3,7 @@ package file.handling.handler.server.file.creator;
 import common.error.info.ErrorInfo;
 import common.error.info.ErrorType;
 import common.error.info.WorkbookErrorInfo;
-import file.handling.handler.server.file.formator.ElectricityServerFileFormatter;
+import file.handling.handler.server.file.builder.ElectricityServerFileBuilder;
 import file.handling.parser.ElectricityDataParser;
 import lombok.val;
 
@@ -22,8 +22,8 @@ class ElectricityServerFileCreator extends BaseServerFileCreator {
         val electricityData = parser.getData();
         val firstDate = parser.getFirstDate();
         val secondDate = parser.getSecondDate();
-        val electricityServerFileFormatter = new ElectricityServerFileFormatter(electricityData, firstDate, secondDate);
-        val serverFileData = electricityServerFileFormatter.format();
+        val electricityServerFileFormatter = new ElectricityServerFileBuilder(electricityData, firstDate, secondDate);
+        val serverFileData = electricityServerFileFormatter.build();
         return writeServerFileDataToServer(serverFileData);
     }
 }

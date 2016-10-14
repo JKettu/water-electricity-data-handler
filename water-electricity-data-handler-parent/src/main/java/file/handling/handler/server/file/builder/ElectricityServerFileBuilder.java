@@ -1,4 +1,4 @@
-package file.handling.handler.server.file.formator;
+package file.handling.handler.server.file.builder;
 
 import common.DataType;
 import common.logger.LogCategory;
@@ -20,18 +20,18 @@ import java.util.List;
 
 import static file.handling.util.RegionsUtils.EMPTY_REGIONS;
 
-public class ElectricityServerFileFormatter extends BaseServerFileFormatter<ElectricityDataModel> {
+public class ElectricityServerFileBuilder extends BaseServerFileBuilder<ElectricityDataModel> {
     private String firstDate;
     private String secondDate;
 
-    public ElectricityServerFileFormatter(List<ElectricityDataModel> data, String firstDate, String secondDate) {
+    public ElectricityServerFileBuilder(List<ElectricityDataModel> data, String firstDate, String secondDate) {
         super(data);
         this.firstDate = firstDate;
         this.secondDate = secondDate;
     }
 
     @Override
-    public ByteArrayOutputStream format() {
+    public ByteArrayOutputStream build() {
         val logger = Logger.getLogger(getClass().getName(), "format");
         logger.log(LogCategory.DEBUG, "Creating server electricity file");
         val workbook = new HSSFWorkbook();

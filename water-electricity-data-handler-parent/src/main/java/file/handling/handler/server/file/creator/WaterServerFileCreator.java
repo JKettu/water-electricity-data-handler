@@ -3,7 +3,7 @@ package file.handling.handler.server.file.creator;
 import common.error.info.ErrorInfo;
 import common.error.info.ErrorType;
 import common.error.info.WorkbookErrorInfo;
-import file.handling.handler.server.file.formator.WaterServerFileFormatter;
+import file.handling.handler.server.file.builder.WaterServerFileBuilder;
 import file.handling.parser.WaterDataParser;
 import lombok.val;
 
@@ -20,8 +20,8 @@ class WaterServerFileCreator extends BaseServerFileCreator {
         }
         val waterData = parser.getData();
         val period = parser.getPeriod();
-        val waterServerFileFormatter = new WaterServerFileFormatter(waterData, period);
-        val serverFileData = waterServerFileFormatter.format();
+        val waterServerFileFormatter = new WaterServerFileBuilder(waterData, period);
+        val serverFileData = waterServerFileFormatter.build();
         return writeServerFileDataToServer(serverFileData);
     }
 }
