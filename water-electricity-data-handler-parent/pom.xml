@@ -16,14 +16,6 @@
             </activation>
         </profile>
     </profiles>
-
-    <repositories>
-        <repository>
-            <id>central</id>
-            <url>http://repo1.maven.org/maven/</url>
-        </repository>
-    </repositories>
-
     <properties>
         <poi.version>3.15</poi.version>
         <apache.version>18</apache.version>
